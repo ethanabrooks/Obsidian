@@ -4,14 +4,30 @@ This document outlines a proposed redesign of our AI issue resolution system to 
 
 # Current System Review
 
-<!-- Please write some intro text here. We implemented both Agentless and Codemonkeys by forking their code and changing it as little as possible. Now we want to make it our own and make
-it modular -->
+We have implemented both Agentless and Codemonkeys frameworks by forking their codebases with minimal modifications. Ultimately we want to rewrite both, with priority on
+Codemonkeys.
+
+### [Agentless](https://github.com/OpenAutoCoder/Agentless)
+
+The original framework for automated code repair, introducing the key stages that Codemonkeys later refined. While it underperforms Codemonkeys, we may want to borrow from it in
+some of our experiments.
+
+1. **Localization**:
+
+   - Uses embeddings to select relevant files (more efficient than LLM evaluation)
+   - Identifies specific AST nodes rather than entire files
+   - Better handling of large files with targeted selection
+
+2. **Repair**: Generates fix patches independently
+
+3. **Testing**:
+
+   - Separate stage for test generation
+   - Tests are "blind" to the patch
+
+4. **Selection**: Uses majority voting among candidates
 
 ### [Codemonkeys](https://scalingintelligence.stanford.edu/pubs/codemonkeys/)
-
-<!-- Also need an intro. This is currently one of the strongest performing
-"agentless"-style frameworks.
- -->
 
 1. **Context Stage**:
 
@@ -31,25 +47,6 @@ it modular -->
      - Majority voting based on test pass rates
      - LLM evaluation of proposed patches
 
-### [Agentless](https://github.com/OpenAutoCoder/Agentless)
-
-<!-- Need an intro: Agentless came before Codemonkeys. Codemonkeys is better but Agentless has some logic that we might want to use. Also, please put this section before the Codemonkeys section and rewrite both so that they make sense in the new order -->
-
-1. **Localization**:
-
-   - Uses embeddings to select relevant files (more efficient than LLM evaluation)
-   - Identifies specific AST nodes rather than entire files
-   - Better handling of large files with targeted selection
-
-2. **Repair**: Generates fix patches independently
-
-3. **Testing**:
-
-   - Separate stage for test generation
-   - Tests are "blind" to the patch
-
-4. **Selection**: Uses majority voting similarly to Codemonkeys
-
 ### Relationship Between Systems
 
 The stages roughly align:
@@ -66,9 +63,7 @@ Key differences:
 
 # Proposed Design
 
-<!-- Again need some intro: why are we proposing the design? Because we want to
-make the code that we forked from these other codebases our own and we want the results
-to be modular adn clean -->
+Our goal is to create a modular system that allows researchers to mix and match components from both frameworks or new ones that emerge, while maintaining compatibility with our online RL infrastructure.
 
 **Key Challenges for Existing Systems:**
 
@@ -77,14 +72,9 @@ to be modular adn clean -->
 - File-based data passing between stages adds unnecessary complexity
 - Need to support pseudo-rewards in order to debug credit assignment
 
-<!-- I also think before we start throwing code at people we need a bit of high-level explanation like I gave you: we have this structure where at the componenet level,
-things get sequenced in a certain way but we want some flexibility with that sequence
-meanwhile we want the whole thing to fit into our Online RL framework so it has to
-conform to certain assumptions. -->
-
 ## Proposed Component Interfaces
 
-<!-- Again could you include some of the thinking behind these protocols here? Ask me if I haven't given you enough info -->
+These interfaces aim to standardize communication between components while allowing flexibility in implementation.
 
 ```python
 class LocalizationProtocol:
@@ -134,13 +124,25 @@ class Experiment(Protocol):
     ...
 ```
 
-<!-- Could you include the python code that I suggested? It is there to show how these interfaces might instantiate actual logic -->
+Example experiment script:
+
+```python
+async def run(
+    instance_id: str,
+    model_endpoint: str,
+) -> Patch:
+    context = await Localizer().locate(instance_id)
+    # in this example, the PatchGenerator will be trained
+    # because it actually uses the dromeus endpoint
+    patches = await PatchGenerator(model_endpoint).generate(context, instance_id)
+    return await Selector().select(patches, instance_id)
+```
 
 # Pseudo-Rewards
 
 To enable independent optimization of components, we propose "pseudo-rewards" - approximate metrics for the success of each stage:
 
-**Localization**: Percent of of gold patch included in output ("recall" in the Codemonkeys paper)
+**Localization**: Percent of gold patch included in output ("recall" in the Codemonkeys paper)
 
 **Patch Generation**
 
@@ -154,14 +156,33 @@ To enable independent optimization of components, we propose "pseudo-rewards" - 
 - Quality of selection vs random baseline
 - Include gold patch among proposed patches and test ability of selection to identify it
 
-<!-- What about Anticipated Experiments? That is one of the required sections bro -->
+# Anticipated Experiments
+
+1. **Validate Online RL**:
+
+   - Use gold patch context as temporary workaround for cache population
+   - Focus on training Patch Generation components first
+
+2. **Use Agentless Localization**:
+
+   - Agentless localization context is much smaller because it doesn't pass entire files
+   - It's also much cheaper because it uses embeddings instead of LLM calls
+
+3. **Component Optimization**:
+
+   - Train each component independently using pseudo-rewards
+   - Compare performance of mixed configurations
+
+4. **Alternative Architectures**:
+   - Test different stage orderings (e.g., multiple localization-generation cycles)
+   - Evaluate separate vs. combined fix/test generation
 
 # Near-Term Priorities
 
+- Remove `pydra` dependency
 - Replace file-based communication between stages with in-memory
 - Get existing code to implement basic protocol interfaces
-- Implment end-to-end and component-level tests
+- Implement end-to-end and component-level tests
 - Identify a better storage solution for caching localization results
 - Implement cache migration from current system
 - Write scripts for evaluating and training pseudo-rewards
-<!-- What about pydra ?-->

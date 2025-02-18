@@ -1,0 +1,174 @@
+{
+  "main": {
+    "id": "bb8a73ac5ffe27fc",
+    "type": "split",
+    "children": [
+      {
+        "id": "9741880ee5a2e176",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "77a2d624dd046545",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "12276b0d371213ac",
+    "type": "split",
+    "children": [
+      {
+        "id": "21ec7a2cc8216527",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0377f5026c1f6c56",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "a60b7b4ad3dd537f",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "78cfb11f95c57ab8",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "right": {
+    "id": "07c2b2822f48ea13",
+    "type": "split",
+    "children": [
+      {
+        "id": "98862c8f2c964ffe",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0656649ad96b208c",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "backpacks.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for backpacks"
+            }
+          },
+          {
+            "id": "8f6cf24ff91efb09",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "backpacks.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from backpacks"
+            }
+          },
+          {
+            "id": "1e40d72bfe00c583",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "98acfc67b809567c",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "backpacks.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of backpacks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false
+    }
+  },
+  "active": "77a2d624dd046545",
+  "lastOpenFiles": [
+    "backpacks.md",
+    "Pasted image 20250216124541.png",
+    "Pasted image 20250216124520.png"
+  ]
+}

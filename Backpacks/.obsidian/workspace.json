@@ -11,10 +11,14 @@
             "id": "77a2d624dd046545",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "backpacks.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "backpacks"
             }
           }
         ]
@@ -167,6 +171,7 @@
   },
   "active": "77a2d624dd046545",
   "lastOpenFiles": [
+    "Pasted image 20250219055805.png",
     "backpacks.md",
     "Pasted image 20250216124541.png",
     "Pasted image 20250216124520.png"

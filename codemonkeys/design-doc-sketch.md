@@ -72,31 +72,29 @@ Our goal is to create a modular system that allows researchers to mix and match 
 
 ## Proposed Component Interfaces
 
-These interfaces aim to standardize communication between components while allowing flexibility in implementation. Each component returns both its primary output (e.g., CodePointers for Localization) and the sequence of LLM interactions that produced that output.
+These interfaces aim to standardize communication between components while allowing flexibility in implementation. Each component returns both its primary output (e.g., str for Localization) and the sequence of LLM interactions that produced that output.
 
 ```py
-class LocalizationProtocol:
-    def locate(
-        instance_id: str
-    ) -> list[CodePointer]:  # CodePointer could be line numbers, AST nodes, etc.
-        ...
+def locate(
+    instance_id: str,
+    model_name: str,
+) -> tuple[str, list[Message]]:
+    ...
 
-class PatchGenerationProtocol:
-    def generate(
-        context: list[CodePointer],
-        instance_id: str
-    ) -> list[Patch]:  # Patch = structured diff
-        ...
+def generate(
+    localization_context: str,
+    instance_id: str,
+    model_name: str
+) -> tuple[list[Patch], list[Message]]:
+    ...
 
-class SelectionProtocol:
-    def select(
-        patches: list[Patch],
-        instance_id: str
-    ) -> Patch:
-        ...
+def select(
+    patches: list[Patch],
+    instance_id: str,
+    model_name: str
+) -> tuple[Patch, list[Message]]:
+    ...
 ```
-
-Note that each component is responsible for writing its own messages to storage. We can discuss the best way to indicate this requirement in the interface.
 
 ## Trace Generation Framework
 
@@ -109,66 +107,40 @@ Key requirements for trace generation scripts:
 Example minimal trace generator:
 
 ```py
-class TraceGenerator(Protocol):
+class Sequence(pydantic.BaseModel):
+  messages: list[Message]
+  metadata: dict
+
+class Output(pydantic.BaseModel):
+  sequences: list[Sequence]
+  score: float
+  metadata: dict
+
+class OnlineRLTrainable(Protocol):
   async def run(
       instance_id: str,
       model_endpoint: str,
-      writer: Writer,
-  ):
+  ) -> Output:
     ...
-
-  async def hypers() -> list[dict[str, Any]]:
-    ...
-```
-
-Example experiment script:
-
-```py
-async def run(
-    instance_id: str,
-    model_endpoint: str,
-    writer: Writer,
-):
-    context = await Localizer(writer).locate(instance_id)
-    # In this example, the PatchGenerator uses the model endpoint
-    # to route requests to the model hosted on the Dromeus server.
-    patches = await PatchGenerator(
-      model_endpoint, writer
-    ).generate(context, instance_id)
-    await Selector(writer).select(patches, instance_id)
-```
-
-## Alternative Functional Interface
-
-An alternative approach favors functional design that abstracts away storage details. This would, among other things, simplify testing since components can be tested without mocking a writer.  
-`class TraceGenerator(Protocol):`  
- `async def run(`  
- `instance_id: str,`  
- `model_endpoint: str,`  
- `) -> list[Message]:`  
- `...`
-
-`async def hypers() -> list[dict[str, Any]]:`  
- `...`
-
-```py
 
 def locate(
-    instance_id: str
-model_name: str | None = ...
-) -> tuple[list[CodePointer], list[Message]]:
+    instance_id: str,
+    model_name: str,
+) -> tuple[str, Sequence]:
     ...
 
 def generate(
-    context: list[CodePointer],
-    instance_id: str
-) -> tuple[list[Patch], list[Message]]:
+    context: str,
+    instance_id: str,
+    model_name: str,
+) -> tuple[list[Patch], Sequence]:
     ...
 
 def select(
     patches: list[Patch],
-    instance_id: str
-) -> tuple[Patch, list[Message]]:
+    instance_id: str,
+    model_name: str,
+) -> tuple[Patch, Sequence]:
     ...
 ```
 
@@ -180,34 +152,31 @@ from codemonkeys import generate, select
 
 async def run(
     instance_id: str,
-    model_endpoint: str,
- ):
-    context, localization_messages = await locate(instance_id, model_name='claude')
-    patches, patch_generation_messages = await generate(context, instance_id, model_name=model_endpoint)
-    selected_patch, selection_messages = await select(patches, instance_id, model='gpt4o')
+    model_name: str,  # this potentially points at Dromeus
+ ) -> :
+    context, localization_sequence = await locate(instance_id, model_name='text-embedding-3-large')
+    patches, patch_generation_sequence = await generate(context, instance_id, model_name=model_name)
+    selected_patch, selection_sequence = await select(patches, instance_id, model_name='claude-3.5-sonnet')
+    score = evaluate(selected_patch, instance_id)
 
-    messages = localization_messages + patch_generation_messages + selection_messages
-    return score, dict(sequence_name=list[messages], ...)
+    return Output(
+        sequences=[
+          localization_sequence,
+          patch_generation_sequence,
+          selection_sequence,
+        ],
+        score=score,
+        metadata={},
+    )
 ```
-
-- _Where to put information that is not needed for training but useful for debugging?_
-- _Put it in message metadata?_
-- _Maybe we need to pass a writer in to `run` in order to give control over multiple collections/sequences per episode._
-- _Maybe we need to refactor the configuration of launch scripts_
-- _Two places this needs to work:_
-  - _Online RL_
-  - _Google Batch_
-  - _(locally)_
-- _What is a CodePointer? It’s a string\!_
--
 
 This approach has several advantages:
 
 1. Components are pure functions, easier to test and reason about
 2. Storage concerns are completely separated from component logic
-3. Message handling is explicit in the interface
+3. Sequence organization is explicit in the interface
 
-The main trade-off is that sequences are written all at once at the end of the trace. If the trace fails partway through, nothing gets written to sequence_storage. However, this could be seen as a feature rather than a bug, as it ensures we only store complete traces.
+Note that this interface assumes that the storage system, e.g. `sequence_storage` will make certain decisions about where to physically store different pieces of data. For example, the `score` data would likely get stored in some sequence metadata. Large metadata would get stored in `Message` metadata, due to the size limitations of `Sequence` metadata. Any information that is required by an outside system would appear in the `Output` interface. Outside systems would not be allowed to make assumptions about the contents of metadata at any level.
 
 # Pseudo-Rewards
 
@@ -231,33 +200,13 @@ To enable independent optimization of components, we propose "pseudo-rewards" \-
 
 Caching is critical for both development velocity and cost management. The localization stage in particular is expensive, requiring multiple LLM calls per file. Without caching, we would quickly hit rate limits and incur significant costs when training models on our \~15k instance dataset.
 
-Currently we cache localization results as zip files in GCloud buckets. This approach has several limitations:
+Currently we cache localization results as zip files in GCloud buckets, an approach which has many several limitations.
 
-1. **Poor Queryability**:
+- poor queryability
+- no support for conditioning the cache on the configuration used to generate it
+- no support for partial cache hits
 
-   - Zip files are opaque \- can't easily search through cached results
-   - Directory/file naming becomes a poor substitute for proper metadata
-   - Difficult to filter for specific configurations (e.g., by model or context length)
-
-2. **Config Management**:
-
-   - Each configuration change requires a new cache directory
-   - No clear way to track which configs produced which caches
-   - Storage becomes fragmented across many directories
-
-3. **Performance**:
-   - Must download and unzip files to access cached results
-   - No partial cache hits \- must regenerate entire cache for config changes
-
-To address these issues, we propose moving to a database-backed caching system that supports:
-
-- [ ] Rich metadata and config versioning
-- [ ] Efficient querying by any parameter
-- [ ] Partial cache hits
-- [ ] Good performance under high load
-- [ ] Results from multiple pipeline stages
-
-This design would also make it easier to cache results from other stages when needed, such as caching Generation results while training the Selection stage.
+To address these issues, we propose implementing a context cache in some big-data storage system like GCP Bigtable. This system would cache all calls made to `Machina`. Each cache would be mapped to the configuration used to generate it. This solution has the advantage of being agnostic to the system that uses it, sparing us from re-implementing a new cache for each new system.
 
 # Anticipated Experiments
 
@@ -278,9 +227,13 @@ The following experiments represent possible research directions our design shou
 - [ ] Train each component independently using pseudo-rewards
 - [ ] Compare performance of mixed configurations
 
-**Ablating different stages of Localization**:
+**Ablating different stages of Agentless Localization**:
 
-- TODO
+Ablatable components include:
+
+- [ ] Relevance scoring
+- [ ] Irrelevance scoring
+- [ ] Embedding scoring
 
 **Alternative Architectures**:
 

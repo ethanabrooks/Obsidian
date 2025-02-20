@@ -16,7 +16,7 @@ The original framework for automated code repair, introducing the key stages tha
    - Identifies specific AST nodes rather than entire files
    - Better handling of large files with targeted selection
 
-2. **Repair**: Generates fix patches independently
+2. **Repair**: Generates fix patches independently  
 
 3. **Testing**:
 
@@ -66,18 +66,18 @@ The following experiments represent possible research directions our design shou
 
 **Validate Online RL**:
 
-- [ ] Use gold patch context as temporary workaround for cache population
-- [ ] Focus on training Patch Generation components first
+- Use gold patch context as temporary workaround for cache population
+- Focus on training Patch Generation components first
 
 **Use Agentless Localization**:
 
-- [ ] Agentless localization context is much smaller because it doesn't pass entire files
-- [ ] It's also much cheaper because it full files are only passed through the embedding API instead of using LLM calls
+- Agentless localization context is much smaller because it doesn't pass entire files
+- It's also much cheaper because it full files are only passed through the embedding API instead of using LLM calls
 
 **Component Optimization**:
 
-- [ ] Train each component independently using pseudo-rewards (described in Pseudo-Rewards section below)
-- [ ] Compare performance of mixed configurations
+- Train each component independently using pseudo-rewards (described in Pseudo-Rewards section below)
+- Compare performance of mixed configurations
 
 **Ablating different stages of Agentless Localization**:
 
@@ -89,8 +89,8 @@ Ablatable components include:
 
 **Alternative Architectures**:
 
-- [ ] Test different stage orderings (e.g., multiple localization-generation cycles)
-- [ ] Evaluate separate vs. combined fix/test generation
+- Test different stage orderings (e.g., multiple localization-generation cycles)
+- Evaluate separate vs. combined fix/test generation
 
 # Pseudo-Rewards
 
@@ -100,7 +100,7 @@ To enable independent optimization of components, we propose "pseudo-rewards" \-
 
 **Patch Generation**
 
-- The proportion of tasks where at least one generated edit (out of N sampled) passes the gold test (the "ground-truth" test used to evaluate submissions for the benchmark). This measure is called "coverage" in the CodeMonkeys paper.
+- The proportion of tasks where at least one generated edit (out of N sampled) passes the gold test (the “ground-truth” test used to evaluate submissions for the benchmark). This measure is called “coverage” in the CodeMonkeys paper.
 - More approximate metrics that bypass test execution (for speed):
   - Textual similarity to gold patch (as measured by Levenshtein distance or LLM)
   - Test coverage of proposed fixes
@@ -121,6 +121,8 @@ Having laid out our experimental goals and the metrics we'll need to achieve the
 - Long contexts from the Codemonkeys "Context" stage will exceed the limits of our in-house model
 - File-based data passing between stages adds unnecessary complexity
 - Need to support pseudo-rewards in order to debug credit assignment
+
+## Component Design
 
 To address these challenges, we propose standardizing how components communicate while maintaining flexibility in their implementation. Each component should return both its primary output (e.g., str for Localization) and the sequence of LLM interactions that produced that output:
 
@@ -152,11 +154,11 @@ def select(
 
 ## Trace Generation Framework
 
-Key requirements for trace generation scripts:
+Now we describe how these components might be integrated into a trace-generation script in order to implement experiments. There are several key existing requirements for a trace generation script. It must:
 
-1. Must integrate with `Machina` for model inference
-2. Must log to `sequence_storage` for training
-3. Must implement standard protocols for hyper-parameters
+1. integrate with `Machina` for model inference
+2. log to `sequence_storage` for training
+3. implement standard protocols for hyper-parameters
 
 Example implementation:
 
@@ -333,12 +335,12 @@ To address these issues, we propose implementing a context cache in some big-dat
 
 Before embarking on a full refactor of the existing code, we should complete the following tasks:
 
-- [ ] Remove `pydra` dependency (mostly unused, poorly typed)
-- [ ] Replace file-based communication between stages with in-memory
-- [ ] Get existing code to implement basic protocol interfaces
-- [ ] Implement end-to-end and component-level tests
-- [ ] Identify a better storage solution for caching localization results
-- [ ] Implement cache migration from current system
-- [ ] Write scripts for evaluating and training pseudo-rewards
-- [ ] Refactor the codebase content logic to enable general access to file content without invoking docker. E.g., refactor the gold patch context logic to use in-memory files.
-- [ ] Use `machina_schema.Message` inside codemonkeys. Currently codemonkeys introduces a different kind of message that does not add any benefit over machina messages.
+- Remove `pydra` dependency (mostly unused, poorly typed)
+- Replace file-based communication between stages with in-memory
+- Get existing code to implement basic protocol interfaces
+- Implement end-to-end and component-level tests
+- Identify a better storage solution for caching localization results
+- Implement cache migration from current system
+- Write scripts for evaluating and training pseudo-rewards
+- Refactor the codebase content logic to enable general access to file content without invoking docker. E.g., refactor the gold patch context logic to use in-memory files.
+- Use `machina_schema.Message` inside codemonkeys. Currently codemonkeys introduces a different kind of message that does not add any benefit over machina messages.

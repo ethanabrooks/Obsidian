@@ -16,7 +16,7 @@ The original framework for automated code repair, introducing the key stages tha
    - Identifies specific AST nodes rather than entire files
    - Better handling of large files with targeted selection
 
-2. **Repair**: Generates fix patches independently  
+2. **Repair**: Generates fix patches independently
 
 3. **Testing**:
 
@@ -74,7 +74,7 @@ The following experiments represent possible research directions our design shou
 
 **Component Optimization**:
 
-- [ ] Train each component independently using pseudo-rewards (see next section)
+- [ ] Train each component independently using pseudo-rewards (described in Pseudo-Rewards section below)
 - [ ] Compare performance of mixed configurations
 
 **Ablating different stages of Agentless Localization**:
@@ -98,7 +98,7 @@ To enable independent optimization of components, we propose "pseudo-rewards" \-
 
 **Patch Generation**
 
-- The proportion of tasks where at least one generated edit (out of N sampled) passes the gold test (the “ground-truth” test used to evaluate submissions for the benchmark). This measure is called “coverage” in the CodeMonkeys paper.
+- The proportion of tasks where at least one generated edit (out of N sampled) passes the gold test (the "ground-truth" test used to evaluate submissions for the benchmark). This measure is called "coverage" in the CodeMonkeys paper.
 - More approximate metrics that bypass test execution (for speed):
   - Textual similarity to gold patch (as measured by Levenshtein distance or LLM)
   - Test coverage of proposed fixes
@@ -110,7 +110,7 @@ To enable independent optimization of components, we propose "pseudo-rewards" \-
 
 # Proposed Trace Generation Design
 
-Our goal is to create a modular system that allows researchers to mix and match components from both frameworks or new ones that emerge, while maintaining compatibility with our online RL infrastructure.
+Having laid out our experimental goals and the metrics we'll need to achieve them, we now turn to designing a system that can support this kind of flexible experimentation. Our goal is to create a modular system that allows researchers to mix and match components from both frameworks or new ones that emerge, while maintaining compatibility with our online RL infrastructure.
 
 **Key Challenges for Existing Implementation:**
 

@@ -102,25 +102,26 @@ def select(
 
 ## Trace Generation Framework
 
-The current trace generation script (`generate_traces_train.py`) interweaves business logic with storage concerns:
+Key requirements for trace generation scripts:
 
-```python
-# Storage details scattered throughout the code
-await writer.write(message.model_dump(mode='json'))
-writer.metadata.setdefault('ckpt_step', step)
-last_message.update_metadata(**evaluation.model_dump())
-writer.metadata.update(metadata_update)
-```
+1. Must integrate with `Machina` for model inference
+2. Must log to `sequence_storage` for training
+3. Must implement standard protocols for hyper-parameters
 
-We propose a cleaner interface that separates these concerns:
+Example minimal trace generator:
 
 ```py
+class TraceData(pydantic.BaseModel):
+  sequences: list[Sequence]
+  score: float
+  metadata: dict
+
 class TraceGenerator(Protocol):
-    async def generate_trace(
-        instance_id: str,
-        model_endpoint: str,
-    ) -> Output:
-        ...
+  async def generate_trace(
+      instance_id: str,
+      model_endpoint: str,
+  ) -> TraceData:
+    ...
 ```
 
 Example implementation:
@@ -131,14 +132,14 @@ from codemonkeys import generate, select
 
 async def generate_trace(
     instance_id: str,
-    model_name: str,  # this potentially points at Machina
-) -> Output:
+    model_name: str,  # this potentially points at Dromeus
+) -> TraceData:
     context, localization_sequence = await locate(instance_id, model_name='text-embedding-3-large')
     patches, patch_generation_sequence = await generate(context, instance_id, model_name=model_name)
     selected_patch, selection_sequence = await select(patches, instance_id, model_name='claude-3.5-sonnet')
     score = evaluate(selected_patch, instance_id)
 
-    return Output(
+    return TraceData(
         sequences=[
           localization_sequence,
           patch_generation_sequence,
@@ -168,7 +169,7 @@ This approach has several problems:
 - Testing requires mocking complex writer behavior
 - Changes to storage requirements affect multiple parts of the code
 
-The `Output` abstraction serves several purposes:
+The new signature for `generate_trace` and the `TraceData` abstraction serve several purposes:
 
 **Storage Implementation Details**: Components focus on producing data, not storing it. For example, they shouldn't need to know that large metadata must be stored in message metadata rather than sequence metadata.
 
@@ -180,7 +181,7 @@ The `Output` abstraction serves several purposes:
 - Optional component-specific data goes in `metadata`
 - Interface requirements are clear while maintaining flexibility
 
-For example, while `score` might ultimately be stored in sequence metadata by the storage system, components don't need to know this - they just set it as a field on `Output`. This separation of concerns makes components easier to test and reason about, as they can treat `Output` as a pure in-memory data structure.
+For example, while `score` might ultimately be stored in sequence metadata by the storage system, components don't need to know this - they just set it as a field on `TraceData`. This separation of concerns makes components easier to test and reason about, as they can treat `TraceData` as a pure in-memory data structure.
 
 # Pseudo-Rewards
 

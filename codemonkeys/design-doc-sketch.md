@@ -66,7 +66,7 @@ Our goal is to create a modular system that allows researchers to mix and match 
 
 - Components are tightly coupled, making experimentation difficult
 - Expensive localization stage causes rate-limiting bottlenecks
-- Long contexts from the Codemonkeys “Context” stage will exceed the limits of our in-house model.
+- Long contexts from the Codemonkeys "Context" stage will exceed the limits of our in-house model.
 - File-based data passing between stages adds unnecessary complexity
 - Need to support pseudo-rewards in order to debug credit assignment
 
@@ -75,53 +75,9 @@ Our goal is to create a modular system that allows researchers to mix and match 
 These interfaces aim to standardize communication between components while allowing flexibility in implementation. Each component returns both its primary output (e.g., str for Localization) and the sequence of LLM interactions that produced that output.
 
 ```py
-def locate(
-    instance_id: str,
-    model_name: str,
-) -> tuple[str, list[Message]]:
-    ...
-
-def generate(
-    localization_context: str,
-    instance_id: str,
-    model_name: str
-) -> tuple[list[Patch], list[Message]]:
-    ...
-
-def select(
-    patches: list[Patch],
-    instance_id: str,
-    model_name: str
-) -> tuple[Patch, list[Message]]:
-    ...
-```
-
-## Trace Generation Framework
-
-Key requirements for trace generation scripts:
-
-1. Must integrate with `Machina` for model inference
-2. Must log to `sequence_storage` for training
-3. Must implement standard protocols for hyper-parameters
-
-Example minimal trace generator:
-
-```py
 class Sequence(pydantic.BaseModel):
-  messages: list[Message]
-  metadata: dict
-
-class Output(pydantic.BaseModel):
-  sequences: list[Sequence]
-  score: float
-  metadata: dict
-
-class OnlineRLTrainable(Protocol):
-  async def run(
-      instance_id: str,
-      model_endpoint: str,
-  ) -> Output:
-    ...
+    messages: list[Message]
+    metadata: dict[str, Any]
 
 def locate(
     instance_id: str,
@@ -130,30 +86,53 @@ def locate(
     ...
 
 def generate(
-    context: str,
+    localization_context: str,
     instance_id: str,
-    model_name: str,
+    model_name: str
 ) -> tuple[list[Patch], Sequence]:
     ...
 
 def select(
     patches: list[Patch],
     instance_id: str,
-    model_name: str,
+    model_name: str
 ) -> tuple[Patch, Sequence]:
     ...
 ```
 
-Example usage:
+## Trace Generation Framework
+
+The current trace generation script (`generate_traces_train.py`) interweaves business logic with storage concerns:
+
+```python
+# Storage details scattered throughout the code
+await writer.write(message.model_dump(mode='json'))
+writer.metadata.setdefault('ckpt_step', step)
+last_message.update_metadata(**evaluation.model_dump())
+writer.metadata.update(metadata_update)
+```
+
+We propose a cleaner interface that separates these concerns:
+
+```py
+class TraceGenerator(Protocol):
+    async def generate_trace(
+        instance_id: str,
+        model_endpoint: str,
+    ) -> Output:
+        ...
+```
+
+Example implementation:
 
 ```py
 from agentless import locate
 from codemonkeys import generate, select
 
-async def run(
+async def generate_trace(
     instance_id: str,
-    model_name: str,  # this potentially points at Dromeus
- ) -> :
+    model_name: str,  # this potentially points at Machina
+) -> Output:
     context, localization_sequence = await locate(instance_id, model_name='text-embedding-3-large')
     patches, patch_generation_sequence = await generate(context, instance_id, model_name=model_name)
     selected_patch, selection_sequence = await select(patches, instance_id, model_name='claude-3.5-sonnet')
@@ -170,13 +149,38 @@ async def run(
     )
 ```
 
-This approach has several advantages:
+## Storage Abstraction
 
-1. Components are pure functions, easier to test and reason about
-2. Storage concerns are completely separated from component logic
-3. Sequence organization is explicit in the interface
+The current trace generation script (`generate_traces_train.py`) interweaves storage concerns throughout its logic:
 
-Note that this interface assumes that the storage system, e.g. `sequence_storage` will make certain decisions about where to physically store different pieces of data. For example, the `score` data would likely get stored in some sequence metadata. Large metadata would get stored in `Message` metadata, due to the size limitations of `Sequence` metadata. Any information that is required by an outside system would appear in the `Output` interface. Outside systems would not be allowed to make assumptions about the contents of metadata at any level.
+```python
+# Storage details scattered throughout the code
+await writer.write(message.model_dump(mode='json'))
+writer.metadata.setdefault('ckpt_step', step)
+last_message.update_metadata(**evaluation.model_dump())
+writer.metadata.update(metadata_update)
+```
+
+This approach has several problems:
+
+- Components need to know storage implementation details
+- Storage decisions are mixed with business logic
+- Testing requires mocking complex writer behavior
+- Changes to storage requirements affect multiple parts of the code
+
+The `Output` abstraction serves several purposes:
+
+**Storage Implementation Details**: Components focus on producing data, not storing it. For example, they shouldn't need to know that large metadata must be stored in message metadata rather than sequence metadata.
+
+**Data Contract**: The storage system guarantees that data structure and relationships are preserved across serialization boundaries, regardless of physical storage decisions.
+
+**Schema Design**:
+
+- Required fields (like `score`) are explicit in the type
+- Optional component-specific data goes in `metadata`
+- Interface requirements are clear while maintaining flexibility
+
+For example, while `score` might ultimately be stored in sequence metadata by the storage system, components don't need to know this - they just set it as a field on `Output`. This separation of concerns makes components easier to test and reason about, as they can treat `Output` as a pure in-memory data structure.
 
 # Pseudo-Rewards
 
@@ -186,7 +190,7 @@ To enable independent optimization of components, we propose "pseudo-rewards" \-
 
 **Patch Generation**
 
-- The proportion of tasks where at least one generated edit (out of N sampled) passes the gold test (the “ground-truth” test used to evaluate submissions for the benchmark). This measure is called “coverage” in the CodeMonkeys paper.
+- The proportion of tasks where at least one generated edit (out of N sampled) passes the gold test (the "ground-truth" test used to evaluate submissions for the benchmark). This measure is called "coverage" in the CodeMonkeys paper.
 - More approximate metrics that bypass test execution (for speed):
   - Textual similarity to gold patch (as measured by Levenshtein distance or LLM)
   - Test coverage of proposed fixes
@@ -198,7 +202,7 @@ To enable independent optimization of components, we propose "pseudo-rewards" \-
 
 # Caching Strategy
 
-Caching is critical for both development velocity and cost management. The localization stage in particular is expensive, requiring multiple LLM calls per file. Without caching, we would quickly hit rate limits and incur significant costs when training models on our \~15k instance dataset.
+Caching is critical for both development velocity and cost management. The localization stage in particular is expensive, requiring multiple LLM calls per file. Without caching, we would quickly hit rate limits and incur significant costs when training models on our ~15k instance dataset.
 
 Currently we cache localization results as zip files in GCloud buckets, an approach which has many several limitations.
 

@@ -66,7 +66,7 @@ Our goal is to create a modular system that allows researchers to mix and match 
 
 - Components are tightly coupled, making experimentation difficult
 - Expensive localization stage causes rate-limiting bottlenecks
-- Long contexts from the Codemonkeys "Context" stage will exceed the limits of our in-house model.
+- Long contexts from the Codemonkeys "Context" stage will exceed the limits of our in-house model
 - File-based data passing between stages adds unnecessary complexity
 - Need to support pseudo-rewards in order to debug credit assignment
 
@@ -108,27 +108,16 @@ Key requirements for trace generation scripts:
 2. Must log to `sequence_storage` for training
 3. Must implement standard protocols for hyper-parameters
 
-Example minimal trace generator:
-
-```py
-class TraceData(pydantic.BaseModel):
-  sequences: list[Sequence]
-  score: float
-  metadata: dict
-
-class TraceGenerator(Protocol):
-  async def generate_trace(
-      instance_id: str,
-      model_endpoint: str,
-  ) -> TraceData:
-    ...
-```
-
 Example implementation:
 
 ```py
 from agentless import locate
 from codemonkeys import generate, select
+
+class TraceData(pydantic.BaseModel):
+    sequences: list[Sequence]  # The LLM interactions that produced the trace
+    score: float              # The evaluation score for the trace
+    metadata: dict           # Additional trace-specific data
 
 async def generate_trace(
     instance_id: str,
@@ -152,7 +141,7 @@ async def generate_trace(
 
 ## Storage Abstraction
 
-The current trace generation script (`generate_traces_train.py`) interweaves storage concerns throughout its logic:
+The `generate_trace` function we proposed addresses the first of our requirements by taking a `model_name` parameter, but is notably silent on storage and configuration. This is intentional - we want to separate the core logic of trace generation from these infrastructure concerns. However, our current implementation in `generate_traces_train.py` interweaves storage throughout its logic:
 
 ```python
 # Storage details scattered throughout the code
@@ -169,35 +158,50 @@ This approach has several problems:
 - Testing requires mocking complex writer behavior
 - Changes to storage requirements affect multiple parts of the code
 
-The new signature for `generate_trace` and the `TraceData` abstraction serve several purposes:
+To address these issues, we propose a new architecture where trace generation is split into two layers:
 
-**Storage Implementation Details**: Components focus on producing data, not storing it. For example, they shouldn't need to know that large metadata must be stored in message metadata rather than sequence metadata.
+1. A core layer focused purely on generating traces:
 
-**Data Contract**: The storage system guarantees that data structure and relationships are preserved across serialization boundaries, regardless of physical storage decisions.
+   ```python
+   class TraceGenerator(Protocol):
+       async def generate_trace(
+           instance_id: str,
+           model_name: str,
+           **kwargs
+       ) -> TraceData:
+           """Generate a trace for a given instance."""
+   ```
 
-**Schema Design**:
+   This layer will have many implementations - different scripts combining components in various ways to experiment with trace generation strategies.
 
-- Required fields (like `score`) are explicit in the type
-- Optional component-specific data goes in `metadata`
-- Interface requirements are clear while maintaining flexibility
+2. A single, shared infrastructure layer that handles storage and execution:
+   - Loads the appropriate generator
+   - Handles all storage operations
+   - Manages configuration and job launching
+   - Provides consistent interfaces to other systems
 
-For example, while `score` might ultimately be stored in sequence metadata by the storage system, components don't need to know this - they just set it as a field on `TraceData`. This separation of concerns makes components easier to test and reason about, as they can treat `TraceData` as a pure in-memory data structure.
+This separation means that trace generators can focus solely on the logic of producing data, while the framework handles all storage and infrastructure concerns. Researchers can create new trace generation strategies without worrying about storage or execution details, as all generators use the same infrastructure layer. The `TraceData` return-type acts as a contract between these layers - generators organize their data into this structure, and the framework guarantees to preserve that organization when storing and retrieving the data.
+
+The power of this contract is that it completely hides storage implementation details. For instance, while `score` might ultimately be stored in sequence metadata by the storage system, components don't need to know this - they just set it as a field on `TraceData`. This separation of concerns makes components easier to test and reason about, as they can treat `TraceData` as a pure in-memory data structure.
 
 ## Trace Generator Registry
 
-With our storage abstraction in place, we need a way to organize different trace generation implementations. We propose using a registry pattern similar to what we use in mathesis for experiment configurations:
+With our storage abstraction in place, we need a way to organize different trace generation implementations. We propose using a registry pattern similar to what we use in `Mathesis` for experiment configurations:
 
 ```py
+# registry.py
 _REGISTRY: dict[str, Type[TraceGenerator]] = {}
 def register(name: str): ...  # Standard decorator pattern
 def get_generator(name: str) -> Type[TraceGenerator]: ...
+
+# run_codemonkeys.py
+@register("codemonkeys_v1")
+class CodemonkeysTraceGenerator(TraceGenerator):
+    async def generate_trace(...) -> TraceData:
+        ...
 ```
 
-This registry serves several purposes:
-
-1. Provides a standard interface that all trace generators must implement
-2. Makes different implementations discoverable and interchangeable
-3. Separates trace generation logic from execution details
+The registry provides a standard interface for trace generators, making different implementations discoverable and interchangeable while keeping generation logic separate from execution details.
 
 ## Standard Execution Framework
 
@@ -206,10 +210,10 @@ Rather than having each trace generator implement its own execution logic, we pr
 ```python
 # trace_runner.py - Standard entry point for all trace generation
 async def main():
-    generator_cls = get_generator(FLAGS.module_name)
+    trace_generator = get_generator(FLAGS.module_name)
 
     # Generator produces pure data structure
-    trace_data = await generator_cls.generate_trace(
+    trace_data = await trace_generator.generate_trace(
         instance_id=FLAGS.instance_id,
         model_name=FLAGS.model_name,
         **FLAGS.flag_values_dict()
@@ -219,11 +223,7 @@ async def main():
     await writer.write_trace(trace_data)
 ```
 
-This centralized runner separates business logic (trace generation) from infrastructure concerns by:
-
-1. Loading the appropriate generator from the registry
-2. Providing consistent flag parsing and configuration
-3. Handling all interaction with storage systems
+The centralized runner loads generators from the registry and handles all infrastructure concerns like flag parsing and storage, letting generators focus purely on trace generation.
 
 ## Infrastructure Integration
 
@@ -231,25 +231,15 @@ Finally, we need to package this framework in a way that works with our existing
 
 ```python
 def experiment(name: str):
-    """Creates a trace generation image for a specific generator."""
-    python_sources(
-        name=f'{name}_runner',
-        sources=['trace_runner.py', f'{name}.py'],  # Combine runner with generator
-        dependencies=[
-            f'//olympus/experiments/{name}',
-            ...
-        ],
-    )
-
-    # Package as executable
-    pex_binary(...)
+    ...  # Package the trace runner as `/bin/trace_runner` pex
 
     # Create container with standard environment
     docker_image(
         name=f'{name}_docker',
         instructions=[
             # ... standard setup ...
-            f'ENTRYPOINT [..., "--module_name={name}"]',  # Bake in generator name
+            f'ENTRYPOINT ["/bin/trace_runner", "--module_name={name}"]',
+            # Launch e.g. `codemonkeys_v1` with the trace runner
         ],
     )
 ```

@@ -185,117 +185,83 @@ For example, while `score` might ultimately be stored in sequence metadata by th
 
 ## Trace Generator Registry
 
-To support this abstraction, we propose organizing trace generators using a registry pattern similar to mathesis:
+With our storage abstraction in place, we need a way to organize different trace generation implementations. We propose using a registry pattern similar to what we use in mathesis for experiment configurations:
 
 ```py
-# trace_generator_registry.py
-from typing import Protocol, Type
-
-class TraceGenerator(Protocol):
-    """Core interface for trace generation logic."""
-    @staticmethod
-    async def hypers() -> list[dict[str, Any]]:
-        """Return hyperparameters for parallel job launching."""
-        ...
-
-    @staticmethod
-    async def generate_trace(
-        instance_id: str,
-        model_name: str,
-        **kwargs
-    ) -> TraceData:
-        """Core trace generation logic."""
-        ...
-
 _REGISTRY: dict[str, Type[TraceGenerator]] = {}
-
-def register(name: str):
-    def decorator(cls: Type[TraceGenerator]) -> Type[TraceGenerator]:
-        _REGISTRY[name] = cls
-        return cls
-    return decorator
-
-def get_generator(name: str) -> Type[TraceGenerator]:
-    return _REGISTRY[name]
+def register(name: str): ...  # Standard decorator pattern
+def get_generator(name: str) -> Type[TraceGenerator]: ...
 ```
+
+This registry serves several purposes:
+
+1. Provides a standard interface that all trace generators must implement
+2. Makes different implementations discoverable and interchangeable
+3. Separates trace generation logic from execution details
 
 ## Standard Execution Framework
 
-The registry enables a standard execution framework that handles storage concerns:
+Rather than having each trace generator implement its own execution logic, we provide a standard runner that handles common concerns:
 
 ```python
-# trace_runner.py
-from absl import app, flags
-from sequence_storage import Writer
-from trace_generator_registry import get_generator
-
-FLAGS = flags.FLAGS
-flags.DEFINE_string('module_name', None, 'Name of trace generator module')
-
-async def main(_):
+# trace_runner.py - Standard entry point for all trace generation
+async def main():
     generator_cls = get_generator(FLAGS.module_name)
-    trace = await generator_cls.generate_trace(
+
+    # Generator produces pure data structure
+    trace_data = await generator_cls.generate_trace(
         instance_id=FLAGS.instance_id,
         model_name=FLAGS.model_name,
         **FLAGS.flag_values_dict()
     )
 
-    writer = Writer(collection_name=FLAGS.collection)
-    await writer.write_trace(trace)
-
-if __name__ == '__main__':
-    app.run(main)
+    # Runner handles storage
+    await writer.write_trace(trace_data)
 ```
+
+This centralized runner separates business logic (trace generation) from infrastructure concerns by:
+
+1. Loading the appropriate generator from the registry
+2. Providing consistent flag parsing and configuration
+3. Handling all interaction with storage systems
 
 ## Infrastructure Integration
 
-Finally, we package this framework into Docker images that can be launched by our infrastructure:
+Finally, we need to package this framework in a way that works with our existing infrastructure. Currently, systems like `launch.py` and `online_rl.py` expect complete, standalone scripts. We can maintain compatibility while using our new framework through careful BUILD rules:
 
 ```python
-# BUILD
-def experiment(name):
-    """Creates a trace generation image combining the runner with a specific generator."""
+def experiment(name: str):
+    """Creates a trace generation image for a specific generator."""
     python_sources(
         name=f'{name}_runner',
-        sources=['trace_runner.py', f'{name}.py'],
-        resolve='base',
+        sources=['trace_runner.py', f'{name}.py'],  # Combine runner with generator
         dependencies=[
             f'//olympus/experiments/{name}',
-            '//olympus/swebench/trace_generator_registry',
-            '//olympus/sequence_storage',
+            ...
         ],
     )
 
-    pex_binary(
-        name=f'{name}_pex',
-        entry_point='olympus.swebench.trace_runner',
-        dependencies=[f':{name}_runner'],
-        layout='packed',
-        execution_mode='venv',
-    )
+    # Package as executable
+    pex_binary(...)
 
+    # Create container with standard environment
     docker_image(
         name=f'{name}_docker',
-        skip_push=True,
-        dependencies=[f':{name}_pex'],
         instructions=[
-            'FROM python:3.12-slim',
             # ... standard setup ...
-            f'ENTRYPOINT ["/usr/local/bin/python3.12", "/bin/app", "--module_name={name}"]',
-            f'COPY olympus.swebench.experiments/{name}_pex.pex /bin/app',
+            f'ENTRYPOINT [..., "--module_name={name}"]',  # Bake in generator name
         ],
     )
-    return f':{name}'
 ```
 
-This approach:
+This approach provides several benefits:
 
-1. Centralizes execution logic in the trace runner
-2. Uses BUILD rules to combine runners with specific generators
-3. Maintains compatibility with existing infrastructure
-4. Makes generator implementations purely about generating traces
+- Each trace-generator gets its own container but shares common infrastructure
+- The standard runner ensures consistent handling of storage and configuration
+- Existing systems can launch these containers with minimal modification
+- New trace-generators only need to implement core logic, not infrastructure
 
-The key change is that instead of each script implementing its own execution logic, they just register trace generators that get combined with our standard runner at build time.
+The primary motivation is to maintain the flexibility of our current system while dramatically reducing duplication and complexity. Instead of each script implementing its own storage and execution logic, they just register trace generators that plug into our standard framework.
 
 # Pseudo-Rewards
 

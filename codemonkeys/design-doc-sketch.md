@@ -70,9 +70,7 @@ Our goal is to create a modular system that allows researchers to mix and match 
 - File-based data passing between stages adds unnecessary complexity
 - Need to support pseudo-rewards in order to debug credit assignment
 
-## Proposed Component Interfaces
-
-These interfaces aim to standardize communication between components while allowing flexibility in implementation. Each component returns both its primary output (e.g., str for Localization) and the sequence of LLM interactions that produced that output.
+To address these challenges, we propose standardizing how components communicate while maintaining flexibility in their implementation. Each component should return both its primary output (e.g., str for Localization) and the sequence of LLM interactions that produced that output:
 
 ```py
 class Sequence(pydantic.BaseModel):
@@ -205,7 +203,7 @@ The registry provides a standard interface for trace generators, making differen
 
 ## Standard Execution Framework
 
-Rather than having each trace generator implement its own execution logic, we provide a standard runner that handles common concerns:
+With the registry in place, we can implement a standard way to run any registered trace generator. Rather than each implementation handling its own execution details, we provide a shared runner that handles common concerns:
 
 ```py
 # trace_runner.py - Standard entry point for all trace generation
@@ -227,7 +225,13 @@ The centralized runner loads generators from the registry and handles all infras
 
 ## Infrastructure Integration
 
-Finally, we need to package this framework in a way that works with our existing infrastructure. Currently, systems like `launch.py` and `online_rl.py` expect complete, standalone scripts. We can maintain compatibility while using our new framework through careful BUILD rules:
+Finally, we need to package `trace_runner.py` in a way that works with our existing infrastructure. Our current systems have specific expectations:
+
+- `launch.py` requires Python modules that define `absl` flags and provide a `hypers()` function for parallel job launching
+- `online_rl.py` expects Docker images that accept standard configuration flags
+- Both systems assume scripts handle their own storage operations
+
+The `hypers()` requirement can be satisfied by adding it to our `TraceGenerator` protocol, while the Docker image requirements for `online_rl.py` can be met through careful `BUILD` rules:
 
 ```py
 def experiment(name: str):
@@ -257,7 +261,7 @@ The primary motivation is to maintain the flexibility of our current system whil
 
 One trade-off of this design is that sequences are written all at once at the end of the trace. If the trace fails partway through, nothing gets written to sequence_storage. However, this could be seen as a feature rather than a bug, as it ensures we only store complete traces.
 
-Another potential concern is that our clean abstraction might be too rigid for some use cases. While separating storage from generation logic works well for standard cases, there might be cases where storage and generation logic are fundamentally intertwined -- for example, scripts that need to write partial results for long-running traces. For these cases, we provide an escape hatch: researchers can write their own `trace_runner.py` implementation while still benefiting from the registry and BUILD infrastructure. This flexibility ensures that our abstraction doesn't become a straightjacket for experimental work.
+Another potential concern is that our clean abstraction might be too rigid for some use cases. While separating storage from generation logic works well for standard cases, there might be cases where storage and generation logic are fundamentally intertwined \-- for example, scripts that need to write partial results for long-running traces. For these cases, a possible escape hatch is for researchers to write their own `trace_runner.py` implementation while still benefiting from the registry and BUILD infrastructure. This flexibility ensures that our abstraction doesn't become a straightjacket for experimental work.
 
 # Pseudo-Rewards
 
@@ -267,7 +271,7 @@ To enable independent optimization of components, we propose "pseudo-rewards" \-
 
 **Patch Generation**
 
-- The proportion of tasks where at least one generated edit (out of N sampled) passes the gold test (the "ground-truth" test used to evaluate submissions for the benchmark). This measure is called "coverage" in the CodeMonkeys paper.
+- The proportion of tasks where at least one generated edit (out of N sampled) passes the gold test (the “ground-truth” test used to evaluate submissions for the benchmark). This measure is called “coverage” in the CodeMonkeys paper.
 - More approximate metrics that bypass test execution (for speed):
   - Textual similarity to gold patch (as measured by Levenshtein distance or LLM)
   - Test coverage of proposed fixes
@@ -287,7 +291,7 @@ Currently we cache localization results as zip files in GCloud buckets, an appro
 - no support for conditioning the cache on the configuration used to generate it
 - no support for partial cache hits
 
-To address these issues, we propose implementing a context cache in some big-data storage system like GCP Bigtable. This system would cache all calls made to `Machina`. Each cache would be mapped to the configuration used to generate it. This solution has the advantage of being agnostic to the system that uses it, sparing us from re-implementing a new cache for each new system.
+To address these issues, we propose implementing a context cache in some big-data-storage system like GCP Bigtable. This system would cache all calls made to `Machina`. Each cache would be mapped to the configuration used to generate it. This solution has the advantage of being agnostic to the system that uses it, sparing us from re-implementing a new cache for each new system.
 
 # Anticipated Experiments
 

@@ -16,7 +16,7 @@ The original framework for automated code repair, introducing the key stages tha
    - Identifies specific AST nodes rather than entire files
    - Better handling of large files with targeted selection
 
-2. **Repair**: Generates fix patches independently
+2. **Repair**: Generates fix patches independently  
 
 3. **Testing**:
 
@@ -57,6 +57,56 @@ Key differences:
 - Granularity of file selection
 - Separation of fix and test generation
 - Codemonkeys patch generation is iterative, while Agentless generates each patch IID.
+
+# Anticipated Experiments
+
+The following experiments represent possible research directions our design should support. While neither exhaustive nor prioritized, these examples illustrate the kinds of flexibility and modularity our system needs to enable.
+
+**Validate Online RL**:
+
+- [ ] Use gold patch context as temporary workaround for cache population
+- [ ] Focus on training Patch Generation components first
+
+**Use Agentless Localization**:
+
+- [ ] Agentless localization context is much smaller because it doesn't pass entire files
+- [ ] It's also much cheaper because it full files are only passed through the embedding API instead of using LLM calls
+
+**Component Optimization**:
+
+- [ ] Train each component independently using pseudo-rewards (see next section)
+- [ ] Compare performance of mixed configurations
+
+**Ablating different stages of Agentless Localization**:
+
+Ablatable components include:
+
+- [ ] Relevance scoring
+- [ ] Irrelevance scoring
+- [ ] Embedding scoring
+
+**Alternative Architectures**:
+
+- [ ] Test different stage orderings (e.g., multiple localization-generation cycles)
+- [ ] Evaluate separate vs. combined fix/test generation
+
+# Pseudo-Rewards
+
+To enable independent optimization of components, we propose "pseudo-rewards" \- approximate metrics for the success of each stage:
+
+**Localization**: Percent of lines in gold patch included in output ("recall" in the Codemonkeys paper)
+
+**Patch Generation**
+
+- The proportion of tasks where at least one generated edit (out of N sampled) passes the gold test (the “ground-truth” test used to evaluate submissions for the benchmark). This measure is called “coverage” in the CodeMonkeys paper.
+- More approximate metrics that bypass test execution (for speed):
+  - Textual similarity to gold patch (as measured by Levenshtein distance or LLM)
+  - Test coverage of proposed fixes
+
+**Selection**
+
+- Directly running the gold test on the selected patch (ground-truth reward)
+- Include gold patch among proposed patches and test ability of selection to identify it
 
 # Proposed Trace Generation Design
 
@@ -263,24 +313,6 @@ One trade-off of this design is that sequences are written all at once at the en
 
 Another potential concern is that our clean abstraction might be too rigid for some use cases. While separating storage from generation logic works well for standard cases, there might be cases where storage and generation logic are fundamentally intertwined \-- for example, scripts that need to write partial results for long-running traces. For these cases, a possible escape hatch is for researchers to write their own `trace_runner.py` implementation while still benefiting from the registry and BUILD infrastructure. This flexibility ensures that our abstraction doesn't become a straightjacket for experimental work.
 
-# Pseudo-Rewards
-
-To enable independent optimization of components, we propose "pseudo-rewards" \- approximate metrics for the success of each stage:
-
-**Localization**: Percent of lines in gold patch included in output ("recall" in the Codemonkeys paper)
-
-**Patch Generation**
-
-- The proportion of tasks where at least one generated edit (out of N sampled) passes the gold test (the “ground-truth” test used to evaluate submissions for the benchmark). This measure is called “coverage” in the CodeMonkeys paper.
-- More approximate metrics that bypass test execution (for speed):
-  - Textual similarity to gold patch (as measured by Levenshtein distance or LLM)
-  - Test coverage of proposed fixes
-
-**Selection**
-
-- Directly running the gold test on the selected patch (ground-truth reward)
-- Include gold patch among proposed patches and test ability of selection to identify it
-
 # Caching Strategy
 
 Caching is critical for both development velocity and cost management. The localization stage in particular is expensive, requiring multiple LLM calls per file. Without caching, we would quickly hit rate limits and incur significant costs when training models on our \~15k instance dataset.
@@ -292,38 +324,6 @@ Currently we cache localization results as zip files in GCloud buckets, an appro
 - no support for partial cache hits
 
 To address these issues, we propose implementing a context cache in some big-data-storage system like GCP Bigtable. This system would cache all calls made to `Machina`. Each cache would be mapped to the configuration used to generate it. This solution has the advantage of being agnostic to the system that uses it, sparing us from re-implementing a new cache for each new system.
-
-# Anticipated Experiments
-
-The following experiments represent possible research directions our design should support. While neither exhaustive nor prioritized, these examples illustrate the kinds of flexibility and modularity our system needs to enable.
-
-**Validate Online RL**:
-
-- [ ] Use gold patch context as temporary workaround for cache population
-- [ ] Focus on training Patch Generation components first
-
-**Use Agentless Localization**:
-
-- [ ] Agentless localization context is much smaller because it doesn't pass entire files
-- [ ] It's also much cheaper because it full files are only passed through the embedding API instead of using LLM calls
-
-**Component Optimization**:
-
-- [ ] Train each component independently using pseudo-rewards
-- [ ] Compare performance of mixed configurations
-
-**Ablating different stages of Agentless Localization**:
-
-Ablatable components include:
-
-- [ ] Relevance scoring
-- [ ] Irrelevance scoring
-- [ ] Embedding scoring
-
-**Alternative Architectures**:
-
-- [ ] Test different stage orderings (e.g., multiple localization-generation cycles)
-- [ ] Evaluate separate vs. combined fix/test generation
 
 # Near-Term Priorities
 

@@ -58,6 +58,8 @@ Key differences:
 - Separation of fix and test generation
 - Codemonkeys patch generation is iterative, while Agentless generates each patch IID.
 
+Having reviewed both frameworks, we now turn to the kinds of experiments we want to enable with our new design. These experiments will help us understand which aspects of each framework are most effective and how they might be combined.
+
 # Anticipated Experiments
 
 The following experiments represent possible research directions our design should support. While neither exhaustive nor prioritized, these examples illustrate the kinds of flexibility and modularity our system needs to enable.
@@ -313,7 +315,9 @@ One trade-off of this design is that sequences are written all at once at the en
 
 Another potential concern is that our clean abstraction might be too rigid for some use cases. While separating storage from generation logic works well for standard cases, there might be cases where storage and generation logic are fundamentally intertwined \-- for example, scripts that need to write partial results for long-running traces. For these cases, a possible escape hatch is for researchers to write their own `trace_runner.py` implementation while still benefiting from the registry and BUILD infrastructure. This flexibility ensures that our abstraction doesn't become a straightjacket for experimental work.
 
-# Caching Strategy
+# Near-Term Priorities
+
+## Caching Strategy
 
 Caching is critical for both development velocity and cost management. The localization stage in particular is expensive, requiring multiple LLM calls per file. Without caching, we would quickly hit rate limits and incur significant costs when training models on our \~15k instance dataset.
 
@@ -325,9 +329,9 @@ Currently we cache localization results as zip files in GCloud buckets, an appro
 
 To address these issues, we propose implementing a context cache in some big-data-storage system like GCP Bigtable. This system would cache all calls made to `Machina`. Each cache would be mapped to the configuration used to generate it. This solution has the advantage of being agnostic to the system that uses it, sparing us from re-implementing a new cache for each new system.
 
-# Near-Term Priorities
+## To Do List
 
-Here we list all the tasks that we should probably complete before embarking on a full refactor of the existing code.
+Before embarking on a full refactor of the existing code, we should complete the following tasks:
 
 - [ ] Remove `pydra` dependency (mostly unused, poorly typed)
 - [ ] Replace file-based communication between stages with in-memory

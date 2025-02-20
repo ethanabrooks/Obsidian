@@ -183,6 +183,120 @@ The new signature for `generate_trace` and the `TraceData` abstraction serve sev
 
 For example, while `score` might ultimately be stored in sequence metadata by the storage system, components don't need to know this - they just set it as a field on `TraceData`. This separation of concerns makes components easier to test and reason about, as they can treat `TraceData` as a pure in-memory data structure.
 
+## Trace Generator Registry
+
+To support this abstraction, we propose organizing trace generators using a registry pattern similar to mathesis:
+
+```py
+# trace_generator_registry.py
+from typing import Protocol, Type
+
+class TraceGenerator(Protocol):
+    """Core interface for trace generation logic."""
+    @staticmethod
+    async def hypers() -> list[dict[str, Any]]:
+        """Return hyperparameters for parallel job launching."""
+        ...
+
+    @staticmethod
+    async def generate_trace(
+        instance_id: str,
+        model_name: str,
+        **kwargs
+    ) -> TraceData:
+        """Core trace generation logic."""
+        ...
+
+_REGISTRY: dict[str, Type[TraceGenerator]] = {}
+
+def register(name: str):
+    def decorator(cls: Type[TraceGenerator]) -> Type[TraceGenerator]:
+        _REGISTRY[name] = cls
+        return cls
+    return decorator
+
+def get_generator(name: str) -> Type[TraceGenerator]:
+    return _REGISTRY[name]
+```
+
+## Standard Execution Framework
+
+The registry enables a standard execution framework that handles storage concerns:
+
+```python
+# trace_runner.py
+from absl import app, flags
+from sequence_storage import Writer
+from trace_generator_registry import get_generator
+
+FLAGS = flags.FLAGS
+flags.DEFINE_string('module_name', None, 'Name of trace generator module')
+
+async def main(_):
+    generator_cls = get_generator(FLAGS.module_name)
+    trace = await generator_cls.generate_trace(
+        instance_id=FLAGS.instance_id,
+        model_name=FLAGS.model_name,
+        **FLAGS.flag_values_dict()
+    )
+
+    writer = Writer(collection_name=FLAGS.collection)
+    await writer.write_trace(trace)
+
+if __name__ == '__main__':
+    app.run(main)
+```
+
+## Infrastructure Integration
+
+Finally, we package this framework into Docker images that can be launched by our infrastructure:
+
+```python
+# BUILD
+def experiment(name):
+    """Creates a trace generation image combining the runner with a specific generator."""
+    python_sources(
+        name=f'{name}_runner',
+        sources=['trace_runner.py', f'{name}.py'],
+        resolve='base',
+        dependencies=[
+            f'//olympus/experiments/{name}',
+            '//olympus/swebench/trace_generator_registry',
+            '//olympus/sequence_storage',
+        ],
+    )
+
+    pex_binary(
+        name=f'{name}_pex',
+        entry_point='olympus.swebench.trace_runner',
+        dependencies=[f':{name}_runner'],
+        layout='packed',
+        execution_mode='venv',
+    )
+
+    docker_image(
+        name=f'{name}_docker',
+        skip_push=True,
+        dependencies=[f':{name}_pex'],
+        instructions=[
+            'FROM python:3.12-slim',
+            # ... standard setup ...
+            f'ENTRYPOINT ["/usr/local/bin/python3.12", "/bin/app", "--module_name={name}"]',
+            f'COPY olympus.swebench.experiments/{name}_pex.pex /bin/app',
+        ],
+    )
+    return f':{name}'
+```
+
+This approach:
+
+1. Centralizes execution logic in the trace runner
+2. Uses BUILD rules to combine runners with specific generators
+3. Maintains compatibility with existing infrastructure
+4. Makes generator implementations purely about generating traces
+
+The key change is that instead of each script implementing its own execution logic, they just register trace generators that get combined with our standard runner at build time.
+
 # Pseudo-Rewards
 
 To enable independent optimization of components, we propose "pseudo-rewards" \- approximate metrics for the success of each stage:

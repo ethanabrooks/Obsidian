@@ -1,0 +1,3 @@
+collection_name,unique_tasks_with_score,ci_95_lower_bound,grand_mean_score,ci_95_upper_bound,easy_score,medium_score,hard_score,maybe_impossible_score
+/swe-bench/swe-agent/print-object-source-05d5b4,49,47.62,51.02,54.42,100.0,88.89,26.39,0.0
+/swe-bench/swe-agent/run-v4-env-sonnet6c51a-,49,45.58,49.66,53.74,100.0,86.11,25.0,0.0

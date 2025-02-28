@@ -1,0 +1,4 @@
+collection_name,unique_tasks_with_score,ci_95_lower_bound,grand_mean_score,ci_95_upper_bound,easy_score,medium_score,hard_score,maybe_impossible_score
+/swe-bench/swe-agent/run-v2-verified-sonnet6c51a-,485,44.95,44.95,44.95,91.3,75.42,38.64,1.98
+/swe-bench/swe-agent/run-v4-verified-sonnet6c51a-,486,47.33,47.33,47.33,95.65,79.49,39.64,4.95
+/swe-bench/swe-agent/no-print-object-source-verified-05d5b4,487,44.35,44.35,44.35,93.48,77.12,35.87,2.0

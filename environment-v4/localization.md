@@ -1,0 +1,3 @@
+- Make it a state machine
+- Do not use files as the unit of logic, but functions/classes/variables etc. (ctags)
+- Ask the model what variable it wants to see the definition of and then use ctags to display it

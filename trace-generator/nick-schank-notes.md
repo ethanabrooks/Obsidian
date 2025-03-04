@@ -1,0 +1,5 @@
+- Serialize something less expressive than `pydantic.BaseModel`
+  - `protobuf`?
+  - `SequenceStorage` JSON schema?
+- Put the reader in `SequenceStorage` (implement as a new `Reader`)
+- Make `BaseData` a protocol (not a `BaseModel`)

@@ -4,20 +4,18 @@
 
 **About Reflection:** Reflection is on a mission to build superhuman coding agents by training Large Language Models (LLMs) with Reinforcement Learning (RL) at scale. Founded by former DeepMind and OpenAI researchers, we are combining cutting-edge AI with real-world applications to solve some of the most challenging problems in autonomous coding.
 
-**Role Overview:** As a member of the Applied AI Team at Reflection, you will be instrumental in helping enable the use of LLMs in Enterprise customer workflows. By helping build the harness to drive, understand and test Reflection’s agents, you will drive significant outcomes for both customers and the Reflection team. Combining your knowledge of LLMs, agents and systems engineering skillset, your work will directly impact the success of Reflection agents, helping deliver a best in class experience to our customer and expanding our knowledge and understanding of superintelligence.
+**Role Overview:** As a member of the Applied AI Team at Reflection, you will be instrumental in helping enable the use of LLMs in Enterprise customer workflows. By helping build the harness to drive, understand and test Reflection's agents, you will drive significant outcomes for both customers and the Reflection team. Combining your knowledge of LLMs, agents and systems engineering skillset, your work will directly impact the success of Reflection agents, helping deliver a best in class experience to our customer and expanding our knowledge and understanding of superintelligence.
 
 **Key Responsibilities:**
 
-- Design and implement agent monitoring systems to detect patterns in reasoning, identify failure modes, and gather insights for improvement
-- Develop and refine prompting strategies to guide agent behavior, reduce pathological patterns, and encourage constructive reasoning paths
-- Create and integrate external tools that enhance agent capabilities, implementing robust interfaces between agents and these tools
-- Build structured environments with appropriate scaffolding to optimize agent performance on coding tasks
-- Implement state machines and workflow logic that strategically present information and decisions to agents at optimal moments
-- Design "agent ergonomics" systems that determine which code components to expose to the agent through techniques like RAG, ripgrep, and selective file presentation
-- Develop testing frameworks to evaluate agent-proposed changes and implement decision logic to select between multiple agent solutions
-- Collaborate with research teams to translate theoretical advancements into practical agent improvements
-- Work directly with enterprise customers to understand their workflows and adapt agent systems to their specific needs
-- Continuously analyze agent performance data to identify opportunities for system-level improvements
+- Design and implement methods to analyze agent reasoning
+- Develop and refine prompting strategies to guide agent behavior
+- Implement workflows that present relevant information to agents at strategic decision points
+- Integrate and implement tools with ergonomic agentic interfaces
+- Develop evaluation frameworks to assess and compare agent-proposed solutions
+- Collaborate with the data team to source evaluation data
+- Collaborate with the product team to translate agent outputs into real-world actions that address customer needs
+- Collaborate with the algorithms team to implement environments that support model training requirements
 
 **Qualifications:**
 

@@ -1,0 +1,34 @@
+Bridgewater <> Reflection pilot
+specification
+Initial pilot will focus on the code optimization use case. There are various places in
+Bridgewater’s codebase where performance optimizations of specific functionality will result in
+significant cost savings. Reflection will initially target the dataframe sorting function as a
+well-scoped instance of this general problem. Bridgewater will then provide two more examples
+of code optimization tasks.
+In parallel, we will determine the technical requirements for deploying Reflection’s agent into
+Bridgewater’s systems.
+Code optimization task specification:
+●​ Input to agent:
+○​ Target function to be optimized
+○​ Target hardware architecture
+○​ Reference implementation
+○​ Unit tests of target function
+●​ Output from agent: new implementation of the target function that preserves all reference
+implementation functionality but runs in less time
+○​ Observability: reasoning from agent, steps taken
+Success criteria for initial pilot:
+●​ Dataframe sorting function: Agent produces optimized function that takes significantly
+less time to run
+●​ Similar results shown on subsequent code optimization tasks
+Timeline:
+●​ 3 weeks (deadline: 4/4)
+Primary contacts:
+●​ Bridgewater: Aaron; Artem (code optimization use case)
+●​ Reflection: Arnaud (Tina while Arnaud is OOO)
+Next steps:
+​ Bridgewater to provide GitHub repo with dataframe sorting code
+​ Bridgewater to create shared Slack channel for async collaboration
+​ Reflection to organize meeting to understand technical requirements for integration
+​ Reflection to prototype code optimization agent
+
+

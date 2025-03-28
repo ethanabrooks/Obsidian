@@ -1,0 +1,58 @@
+digraph Reviews {
+    // Use strict layout control
+    rankdir=TB;
+    node [shape=box];
+    splines=true;
+    
+    // First diagram
+    subgraph cluster_reviews {
+        label = "Reviews";
+        
+        // Force ordering with invisible edges
+        edge [style=invis];
+        Rule1 -> Rule2 -> RuleMore [constraint=true];
+        Chunk1 -> Chunk2 -> Chunk3 -> ChunkMore [constraint=true];
+        
+        // Rules in same rank
+        { rank=same; Rule1 [label="Rule 1"]; Rule2 [label="Rule 2"]; RuleMore [label="...", style=dotted]; }
+        
+        // Chunks in same rank
+        { rank=same; Chunk1 [label="Chunk 1"]; Chunk2 [label="Chunk 2"]; Chunk3 [label="Chunk 3"]; ChunkMore [label="...", style=dotted]; }
+        
+        // Reset edge style for actual connections
+        edge [style=solid, dir=both];
+        
+        // Connections
+        Rule1 -> Chunk1;
+        Rule1 -> Chunk2;
+        Rule1 -> Chunk3;
+        Rule1 -> ChunkMore [style=dotted];
+        
+        Rule2 -> Chunk1;
+        Rule2 -> Chunk2;
+        Rule2 -> Chunk3;
+        Rule2 -> ChunkMore [style=dotted];
+        
+        RuleMore -> Chunk1 [style=dotted];
+        RuleMore -> Chunk2 [style=dotted];
+        RuleMore -> Chunk3 [style=dotted];
+        RuleMore -> ChunkMore [style=dotted];
+    }
+    
+    // Second diagram
+    subgraph cluster_for_each_review {
+        label = "For each review";
+        rankdir=LR;
+        
+        // Left side elements
+        { rank=same; Chunk [label="Chunk"]; Description [label="Description"]; RuleN [label="Rule N\n(Rule that was violated)"]; }
+        
+        // Right side element
+        RuleFixer [label="Rule N Fixer"];
+        
+        // Connections
+        Chunk -> RuleFixer;
+        Description -> RuleFixer;
+        RuleN -> RuleFixer;
+    }
+} 

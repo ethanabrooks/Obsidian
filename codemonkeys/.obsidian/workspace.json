@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Get `codemonkeys` to build with pants.md",
+                "file": "Model costs.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Get `codemonkeys` to build with pants"
+              "title": "Model costs"
             }
           }
         ]
@@ -170,6 +170,9 @@
   },
   "active": "979a4668102ca96d",
   "lastOpenFiles": [
+    "Get `codemonkeys` to build with pants.md",
+    "design-doc-sketch.md",
+    "design-doc-draft.md",
     "Model costs.md"
   ]
 }

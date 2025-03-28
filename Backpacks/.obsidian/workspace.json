@@ -20,8 +20,21 @@
               "icon": "lucide-file",
               "title": "backpacks"
             }
+          },
+          {
+            "id": "850473739192b152",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.8.9"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.8.9"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -169,7 +182,7 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "77a2d624dd046545",
+  "active": "850473739192b152",
   "lastOpenFiles": [
     "Pasted image 20250219055805.png",
     "backpacks.md",

@@ -1,0 +1,38 @@
+@startuml
+package "Reviews" {
+  rectangle "Rule 1" as R1
+  rectangle "Rule 2" as R2
+  rectangle "..." as R3 #line.dotted
+  
+  rectangle "Chunk 1" as C1
+  rectangle "Chunk 2" as C2  
+  rectangle "Chunk 3" as C3
+  rectangle "..." as C4 #line.dotted
+  
+  R1 <--> C1
+  R1 <--> C2
+  R1 <--> C3
+  R1 <..> C4
+  
+  R2 <--> C1
+  R2 <--> C2
+  R2 <--> C3
+  R2 <..> C4
+  
+  R3 <..> C1
+  R3 <..> C2
+  R3 <..> C3
+  R3 <..> C4
+}
+
+package "For each review" {
+  rectangle "Chunk" as C
+  rectangle "Description" as D
+  rectangle "Rule N\n(Rule that was violated)" as RN
+  rectangle "Rule N Fixer" as RF
+  
+  C --> RF
+  D --> RF
+  RN --> RF
+}
+@enduml 

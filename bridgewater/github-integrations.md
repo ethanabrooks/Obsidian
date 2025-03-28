@@ -1,0 +1,2 @@
+- Creating github actions: https://docs.github.com/en/actions/sharing-automations/creating-actions/creating-a-docker-container-action#creating-an-action-metadata-file
+- Creating a github app: https://docs.github.com/en/apps/creating-github-apps/writing-code-for-a-github-app/quickstart#step-1-clone-the-app-code

@@ -1,0 +1,2005 @@
+system_prompt: |
+  You are an AI assistant helping a software development team. Your task is to analyze the provided text from a *merged* GitHub Pull Request (including description, comments, commits, and diff) and potentially related open issues from the same repository. Based *only* on this information, generate the text (title and body) for a *new*, plausible GitHub issue that this Pull Request *appears* to resolve. Crucially, the generated issue should describe the **problem or symptoms** from the perspective of someone encountering the issue *before* the fix was made. Avoid detailing the specific solution implemented in the PR. Focus on creating a realistic-sounding issue (like a bug report or feature request) that logically connects to the changes shown in the PR, but sounds like it was written without knowledge of the final fix. Do not invent external context. Output *only* the issue title and body in markdown format, starting with the title.
+  Example Output Format:
+  # Issue Title
+
+  This is the issue body...
+results:
+- repository: ansible/ansible
+  pr:
+    number: 84925
+    title: Update variable names in C.INTERNAL_STATIC_VARS
+    url: https://github.com/ansible/ansible/pull/84925
+  status: success
+  synthesized_issue: |-
+    # Some Ansible variables are missing from INTERNAL_STATIC_VARS
+
+    Ansible has a set of internal variables that are reserved and cannot be overridden by users. However, it seems that some important variables are missing from this set, leading to potential naming conflicts or unexpected behavior.
+
+    For example, variables like `ansible_check_mode`, `ansible_play_name`, `environment`, `vars`, `ansible_loop`, `ansible_loop_var`, `ansible_index_var`, `item`, and `ansible_search_path` are used internally by Ansible but are not part of the `INTERNAL_STATIC_VARS` set. If a user tries to define a variable with the same name, it could lead to unintended consequences or errors.
+
+    It would be beneficial to update the `INTERNAL_STATIC_VARS` set to include all the internal variables used by Ansible, ensuring that they are properly reserved and protected from accidental overrides or naming conflicts.
+  llm_prompt: "Repository: ansible/ansible\n\n\n--- Context: Existing Open Issues\
+    \ ---\nIssue 1 (Number: 84923):\n  Title: Handle None return in _get_collection_name_from_path()\
+    \ to prevent TypeError\n  Body (Preview):\n##### SUMMARY\n\nFixes the issue  where\
+    \ `_get_collection_name_from_path()` can return `None`, causing errors like `TypeError:\
+    \ sequence item 0: expected str instance, NoneType found`. This change adds proper\
+    \ handling for the `None` return value, preventing crashes when working with nested\
+    \ `ansible_collections` trees.\n\n- Added check for `None` return from `_get_collection_name_from_path()`\
+    \ in `ansible.utils.collection_loader`.\n- Prevented `None` from being used as\
+    \ a key in dictionaries, which p...\n----------\nIssue 2 (Number: 84922):\n  Title:\
+    \ Callbacks do not resolve temlpating for delegate_to \n  Body: [Omitted due to\
+    \ length (3938 > 2000 chars)]\n----------\nIssue 3 (Number: 84859):\n  Title:\
+    \ [stable 2.18] needed intesect, not difference (#84839)\n  Body (Preview):\n\
+    fixes #84750\n\nAdded tests to verify output when using smart + others\n\n(cherry\
+    \ picked from commit 0d4f00f5c89901e53c2f9c32fa87acac3fed8118)\n\n\n##### ISSUE\
+    \ TYPE\n\n- Bugfix Pull Request\n----------\nIssue 4 (Number: 84902):\n  Title:\
+    \ [stable-2.17] import_role docs: fix markup for config variable reference\n \
+    \ Body (Preview):\n##### SUMMARY\nBackport of #84901 to stable-2.17.\n\n#####\
+    \ ISSUE TYPE\n- Docs Pull Request\n----------\nIssue 5 (Number: 84860):\n  Title:\
+    \ [stable 2.17] needed intesect, not difference (#84839)\n  Body (Preview):\n\
+    fixes #84750\n\nAdded tests to verify output when using smart + others\n\n(cherry\
+    \ picked from commit 0d4f00f5c89901e53c2f9c32fa87acac3fed8118)\n\n##### ISSUE\
+    \ TYPE\n\n- Bugfix Pull Request\n----------\n(1 issue bodies omitted due to length\
+    \ limit of 2000 chars.)\n\n--- Pull Request #84925 Details ---\nPR Title: Update\
+    \ variable names in C.INTERNAL_STATIC_VARS\n\nPR Body:\n##### SUMMARY\n\nRelated\
+    \ #84914\n\n* Added ansible_check_mode, ansible_play_name, environment, vars,\
+    \ ansible_loop, ansible_loop_var, ansible_index_var, item, and ansible_search_path\n\
+    \n* Removed ansible_async_path and duplicate roles_path entry\n\nAm I missing\
+    \ any? https://gist.github.com/s-hertel/ce46f33e666de8045b063a083cd32ba0\n\nMissing:\n\
+    - https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#extended-loop-variables\n\
+    -\n\n##### ISSUE TYPE\n\n- Bugfix Pull Request\n\n\n\n--- Issue Comments ---\n\
+    \n@s-hertel @bcoca Do we not have tests to cover any of the functionality affected\
+    \ by this change?\n\nthis is just increasing the keywords, the actual tests are\
+    \ in  #84914 for the warn_if_reserved\n\nI'll check if we had tests for the purging\
+    \ from inventory, if not, i'll add in the same PR\n\nThis could also be consolidated\
+    \ with #84914, or I could add tests for these variables after #84914 is merged.\n\
+    \neither way works4me\n\n\n--- Commit Messages ---\n\nUpdate variable names in\
+    \ C.INTERNAL_STATIC_VARS\n\nAdd ansible_check_mode, ansible_play_name, environment,\
+    \ vars,\nansible_loop, ansible_loop_var, ansible_index_var, item, and\nansible_search_path\n\
+    \nRemove ansible_async_path and duplicate roles_path entry\n\n\n--- Diff ---\n\
+    \ndiff --git a/lib/ansible/constants.py b/lib/ansible/constants.py\nindex af60053a3dd445..d8c7089bcb9856\
+    \ 100644\n--- a/lib/ansible/constants.py\n+++ b/lib/ansible/constants.py\n@@ -139,7\
+    \ +139,7 @@ def __getitem__(self, y):\n INTERNAL_RESULT_KEYS = ('add_host', 'add_group')\n\
+    \ INTERNAL_STATIC_VARS = frozenset(\n     [\n-        \"ansible_async_path\",\n\
+    +        \"ansible_check_mode\",\n         \"ansible_collection_name\",\n    \
+    \     \"ansible_config_file\",\n         \"ansible_dependent_role_names\",\n@@\
+    \ -147,34 +147,42 @@ def __getitem__(self, y):\n         \"ansible_config_file\"\
+    ,\n         \"ansible_facts\",\n         \"ansible_forks\",\n+        \"ansible_index_var\"\
+    ,\n         \"ansible_inventory_sources\",\n         \"ansible_limit\",\n+   \
+    \     \"ansible_local\",\n+        \"ansible_loop\",\n+        \"ansible_loop_var\"\
+    ,\n         \"ansible_play_batch\",\n         \"ansible_play_hosts\",\n      \
+    \   \"ansible_play_hosts_all\",\n+        \"ansible_play_name\",\n         \"\
+    ansible_play_role_names\",\n         \"ansible_playbook_python\",\n         \"\
+    ansible_role_name\",\n         \"ansible_role_names\",\n         \"ansible_run_tags\"\
+    ,\n+        \"ansible_search_path\",\n         \"ansible_skip_tags\",\n      \
+    \   \"ansible_verbosity\",\n         \"ansible_version\",\n+        \"environment\"\
+    ,\n+        \"hostvars\",\n         \"inventory_dir\",\n         \"inventory_file\"\
+    ,\n         \"inventory_hostname\",\n         \"inventory_hostname_short\",\n\
+    +        \"item\",\n         \"groups\",\n         \"group_names\",\n        \
+    \ \"omit\",\n-        \"hostvars\",\n         \"playbook_dir\",\n         \"play_hosts\"\
+    ,\n         \"role_name\",\n         \"role_names\",\n         \"role_path\",\n\
+    \         \"role_uuid\",\n-        \"role_names\",\n+        \"vars\",\n     ]\n\
+    \ )\n LOCALHOST = ('127.0.0.1', 'localhost', '::1')\n\n\n--- Task ---\nBased on\
+    \ the PR details and the context from existing issues provided above, please generate\
+    \ the text (title and body) for a new, plausible GitHub issue that the pull request\
+    \ #84925 appears to resolve. Output only the issue title and body in markdown\
+    \ format.\n"
+  diff: |
+    diff --git a/lib/ansible/constants.py b/lib/ansible/constants.py
+    index af60053a3dd445..d8c7089bcb9856 100644
+    --- a/lib/ansible/constants.py
+    +++ b/lib/ansible/constants.py
+    @@ -139,7 +139,7 @@ def __getitem__(self, y):
+     INTERNAL_RESULT_KEYS = ('add_host', 'add_group')
+     INTERNAL_STATIC_VARS = frozenset(
+         [
+    -        "ansible_async_path",
+    +        "ansible_check_mode",
+             "ansible_collection_name",
+             "ansible_config_file",
+             "ansible_dependent_role_names",
+    @@ -147,34 +147,42 @@ def __getitem__(self, y):
+             "ansible_config_file",
+             "ansible_facts",
+             "ansible_forks",
+    +        "ansible_index_var",
+             "ansible_inventory_sources",
+             "ansible_limit",
+    +        "ansible_local",
+    +        "ansible_loop",
+    +        "ansible_loop_var",
+             "ansible_play_batch",
+             "ansible_play_hosts",
+             "ansible_play_hosts_all",
+    +        "ansible_play_name",
+             "ansible_play_role_names",
+             "ansible_playbook_python",
+             "ansible_role_name",
+             "ansible_role_names",
+             "ansible_run_tags",
+    +        "ansible_search_path",
+             "ansible_skip_tags",
+             "ansible_verbosity",
+             "ansible_version",
+    +        "environment",
+    +        "hostvars",
+             "inventory_dir",
+             "inventory_file",
+             "inventory_hostname",
+             "inventory_hostname_short",
+    +        "item",
+             "groups",
+             "group_names",
+             "omit",
+    -        "hostvars",
+             "playbook_dir",
+             "play_hosts",
+             "role_name",
+             "role_names",
+             "role_path",
+             "role_uuid",
+    -        "role_names",
+    +        "vars",
+         ]
+     )
+     LOCALHOST = ('127.0.0.1', 'localhost', '::1')
+- repository: apache/airflow
+  pr:
+    number: 48513
+    title: Update ECS executor to support Task SDK
+    url: https://github.com/apache/airflow/pull/48513
+  status: success
+  synthesized_issue: |-
+    # ECS Executor Does Not Support Task SDK
+
+    The Apache Airflow ECS Executor currently does not support running tasks using the new Task SDK. When attempting to run a task with the ECS Executor, the task fails with an error like:
+
+    ```
+    TypeError: AwsEcsExecutor cannot handle workloads of type <class 'airflow.executors.workloads.ExecuteTask'>
+    ```
+
+    The Task SDK is a new feature in Airflow that provides a standardized way to execute tasks across different executors. However, the existing ECS Executor implementation does not have the necessary logic to handle the new `ExecuteTask` workload type introduced by the Task SDK.
+
+    This issue prevents users from taking advantage of the Task SDK when running tasks on Amazon ECS using the ECS Executor in Airflow. To fully utilize the Task SDK, the ECS Executor needs to be updated to support the new workload type and execution model.
+  llm_prompt: "Repository: apache/airflow\n\n\n--- Context: Existing Open Issues ---\n\
+    Issue 1 (Number: 48719):\n  Title: task heartbeat failed after task mysteriously\
+    \ went into \"queued\" state\n  Body: [Omitted due to length (2160 > 2000 chars)]\n\
+    ----------\nIssue 2 (Number: 48727):\n  Title: Expanding/collapsing task group\
+    \ option is not available on the grid view\n  Body: [Omitted due to length (2808\
+    \ > 2000 chars)]\n----------\nIssue 3 (Number: 48753):\n  Title: Dag processor\
+    \ is asking for passphrase everytime its refreshing GitDagBundle\n  Body (Preview):\n\
+    ### Apache Airflow version\n\nmain (development)\n\n### If \"Other Airflow 2 version\"\
+    \ selected, which one?\n\n_No response_\n\n### What happened?\n\nDag processor\
+    \ is asking for passphrase everytime its refreshing GitDagBundle.\nThis is happening\
+    \ when user has set passphrase instead of keeping it empty\n\n<img width=\"1595\"\
+    \ alt=\"Image\" src=\"https://github.com/user-attachments/assets/2dc4c099-90e9-4a3c-8bff-b91567fe72c8\"\
+    \ />\n\n### What you think should happen instead?\n\n_No response_\n\n### How\
+    \ to reproduce\n\nThis is...\n----------\nIssue 4 (Number: 48734):\n  Title: fix:\
+    \ overwrite `get-uri` for `Oracle`\n  Body: [Omitted due to length (2987 > 2000\
+    \ chars)]\n----------\nIssue 5 (Number: 48738):\n  Title: add import_notebook\
+    \ method to Databricks hook for programmatic notebo…\n  Body: [Omitted due to\
+    \ length (2100 > 2000 chars)]\n----------\n(4 issue bodies omitted due to length\
+    \ limit of 2000 chars.)\n\n--- Pull Request #48513 Details ---\nPR Title: Update\
+    \ ECS executor to support Task SDK\n\nPR Body:\n### Summary\nFollows the paradigm\
+    \ used in the k8s executor except the serialized workload is passed along as string\
+    \ instead of a file, since there is no (easy) way to plumb a file into the ECS\
+    \ container at run time.\n\nIn the future using a secret to pass along the workload\
+    \ could be another possible approach, but this requires the use of another cloud\
+    \ service (i.e. Secret Manager or Parameter Store).\n\n### Testing\nI tested the\
+    \ ECS executor and execute_workload changes in combination and everything is passing\
+    \ green.\n\n<!--\n Licensed to the Apache Software Foundation (ASF) under one\n\
+    \ or more contributor license agreements.  See the NOTICE file\n distributed with\
+    \ this work for additional information\n regarding copyright ownership.  The ASF\
+    \ licenses this file\n to you under the Apache License, Version 2.0 (the\n \"\
+    License\"); you may not use this file except in compliance\n with the License.\
+    \  You may obtain a copy of the License at\n\n   http://www.apache.org/licenses/LICENSE-2.0\n\
+    \n Unless required by applicable law or agreed to in writing,\n software distributed\
+    \ under the License is distributed on an\n \"AS IS\" BASIS, WITHOUT WARRANTIES\
+    \ OR CONDITIONS OF ANY\n KIND, either express or implied.  See the License for\
+    \ the\n specific language governing permissions and limitations\n under the License.\n\
+    \ -->\n\n<!--\nThank you for contributing! Please make sure that your code changes\n\
+    are covered with tests. And in case of new features or big changes\nremember to\
+    \ adjust the documentation.\n\nFeel free to ping committers for the review!\n\n\
+    In case of an existing issue, reference it using one of the following:\n\ncloses:\
+    \ #ISSUE\nrelated: #ISSUE\n\nHow to write a good git commit message:\nhttp://chris.beams.io/posts/git-commit/\n\
+    -->\n\n\n\n<!-- Please keep an empty line above the dashes. -->\n---\n**^ Add\
+    \ meaningful description above**\nRead the **[Pull Request Guidelines](https://github.com/apache/airflow/blob/main/contributing-docs/05_pull_requests.rst#pull-request-guidelines)**\
+    \ for more information.\nIn case of fundamental code changes, an Airflow Improvement\
+    \ Proposal ([AIP](https://cwiki.apache.org/confluence/display/AIRFLOW/Airflow+Improvement+Proposals))\
+    \ is needed.\nIn case of a new dependency, check compliance with the [ASF 3rd\
+    \ Party License Policy](https://www.apache.org/legal/resolved.html#category-x).\n\
+    In case of backwards incompatible changes please leave a note in a newsfragment\
+    \ file, named `{pr_number}.significant.rst` or `{issue_number}.significant.rst`,\
+    \ in [airflow-core/newsfragments](https://github.com/apache/airflow/tree/main/airflow-core/newsfragments).\n\
+    \n\n\n--- Review Comments ---\n\nCC: @amoghrajesh \n\nThe changes here will be\
+    \ relevant for you to review\n\nTokens is done now btw.\n\nFair, must have happened\
+    \ in main while I was branched. I'll drop that\n\n\n--- Issue Comments ---\n\n\
+    Closing and re-opening to run test (they somehow did not run)\n\n> Overall looks\
+    \ good! Good job with figuring out all these things. Two questions:\n> \n>   \
+    \  * Can we add unit tests? ECS executor changes are not tested\nSure, I can look\
+    \ at adding some. But most all of the actual behaviour of the executor itself\
+    \ hasn't changed. Just the interface to it (which should honestly be tested by\
+    \ the base executor once all this stuff moves into that class). But I'll look\
+    \ at adding a few.\n\n> \n>     * It looks like it is but just double checking.\
+    \ With these changes, is ECS executor still compatible with AF2?\nYupp it should\
+    \ be still working with AF2, I can do a manual test to verify :+1:\n\nFollow up\
+    \ on this:\n\n> > Overall looks good! Good job with figuring out all these things.\
+    \ Two questions:\n> > ```\n> > * Can we add unit tests? ECS executor changes are\
+    \ not tested\n> > ```\n> \n> Sure, I can look at adding some. But most all of\
+    \ the actual behaviour of the executor itself hasn't changed. Just the interface\
+    \ to it (which should honestly be tested by the base executor once all this stuff\
+    \ moves into that class). But I'll look at adding a few.\n\nUnit test added! It\
+    \ pretty comprehensively tests the task SDK path beginning to end. Let me know\
+    \ what you think!\n\n> \n> > ```\n> > * It looks like it is but just double checking.\
+    \ With these changes, is ECS executor still compatible with AF2?\n> > ```\n> \n\
+    > Yupp it should be still working with AF2, I can do a manual test to verify \U0001F44D\
+    \n\nManually setup a repro with AF2 and the current executor, everything works\
+    \ as expected!\n\nCC @ashb @amoghrajesh\n\n\n--- Commit Messages ---\n\nUpdate\
+    \ ECS executor to support Task SDK\n\nFollows the paradigm used in the k8s executor\
+    \ except the serialized\nworkload is passed along as string instead of a file,\
+    \ since there\nis no (easy) way to plumb a file into the ECS container at run\
+    \ time.\n\nIn the future using a secret to pass along the workload could be\n\
+    another possible approach, but this requires the use of another\ncloud service\
+    \ (i.e. Secret Manager or Parameter Store).\n\nMerge branch 'main' into onikolas/ecs_exec_task_sdk\n\
+    \nMerge branch 'main' into onikolas/ecs_exec_task_sdk\n\nAdd unit test to test\
+    \ task sdk path\n\nSmall fix in arg ordering\n\nOnly import within Airflow 3 scope\
+    \ for back compat tests\n\n\n--- Diff ---\n\ndiff --git a/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/ecs_executor.py\
+    \ b/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/ecs_executor.py\n\
+    index 3d9821ae25703..5d0460162dac1 100644\n--- a/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/ecs_executor.py\n\
+    +++ b/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/ecs_executor.py\n\
+    @@ -49,12 +49,16 @@\n     exponential_backoff_retry,\n )\n from airflow.providers.amazon.aws.hooks.ecs\
+    \ import EcsHook\n+from airflow.providers.amazon.version_compat import AIRFLOW_V_3_0_PLUS\n\
+    \ from airflow.stats import Stats\n from airflow.utils import timezone\n from\
+    \ airflow.utils.helpers import merge_dicts\n from airflow.utils.state import State\n\
+    \ \n if TYPE_CHECKING:\n+    from sqlalchemy.orm import Session\n+\n+    from\
+    \ airflow.executors import workloads\n     from airflow.models.taskinstance import\
+    \ TaskInstance, TaskInstanceKey\n     from airflow.providers.amazon.aws.executors.ecs.utils\
+    \ import (\n         CommandType,\n@@ -100,6 +104,11 @@ class AwsEcsExecutor(BaseExecutor):\n\
+    \     # AWS limits the maximum number of ARNs in the describe_tasks function.\n\
+    \     DESCRIBE_TASKS_BATCH_SIZE = 99\n \n+    if TYPE_CHECKING and AIRFLOW_V_3_0_PLUS:\n\
+    +        # In the v3 path, we store workloads, not commands as strings.\n+   \
+    \     # TODO: TaskSDK: move this type change into BaseExecutor\n+        queued_tasks:\
+    \ dict[TaskInstanceKey, workloads.All]  # type: ignore[assignment]\n+\n     def\
+    \ __init__(self, *args, **kwargs):\n         super().__init__(*args, **kwargs)\n\
+    \         self.active_workers: EcsTaskCollection = EcsTaskCollection()\n@@ -114,6\
+    \ +123,32 @@ def __init__(self, *args, **kwargs):\n \n         self.run_task_kwargs\
+    \ = self._load_run_kwargs()\n \n+    def queue_workload(self, workload: workloads.All,\
+    \ session: Session | None) -> None:\n+        from airflow.executors import workloads\n\
+    +\n+        if not isinstance(workload, workloads.ExecuteTask):\n+           \
+    \ raise RuntimeError(f\"{type(self)} cannot handle workloads of type {type(workload)}\"\
+    )\n+        ti = workload.ti\n+        self.queued_tasks[ti.key] = workload\n\
+    +\n+    def _process_workloads(self, workloads: list[workloads.All]) -> None:\n\
+    +        from airflow.executors.workloads import ExecuteTask\n+\n+        # Airflow\
+    \ V3 version\n+        for w in workloads:\n+            if not isinstance(w,\
+    \ ExecuteTask):\n+                raise RuntimeError(f\"{type(self)} cannot handle\
+    \ workloads of type {type(w)}\")\n+\n+            # TODO: AIP-72 handle populating\
+    \ tokens once https://github.com/apache/airflow/issues/45107 is handled.\n+  \
+    \          command = [w]\n+            key = w.ti.key\n+            queue = w.ti.queue\n\
+    +            executor_config = w.ti.executor_config or {}\n+\n+            del\
+    \ self.queued_tasks[key]\n+            self.execute_async(key=key, command=command,\
+    \ queue=queue, executor_config=executor_config)  # type: ignore[arg-type]\n+ \
+    \           self.running.add(key)\n+\n     def start(self):\n         \"\"\"Call\
+    \ this when the Executor is run for the first time by the scheduler.\"\"\"\n \
+    \        check_health = conf.getboolean(\n@@ -462,6 +497,24 @@ def execute_async(self,\
+    \ key: TaskInstanceKey, command: CommandType, queue=None,\n         \"\"\"Save\
+    \ the task to be executed in the next sync by inserting the commands into a queue.\"\
+    \"\"\n         if executor_config and (\"name\" in executor_config or \"command\"\
+    \ in executor_config):\n             raise ValueError('Executor Config should\
+    \ never override \"name\" or \"command\"')\n+        if len(command) == 1:\n+\
+    \            from airflow.executors.workloads import ExecuteTask\n+\n+       \
+    \     if isinstance(command[0], ExecuteTask):\n+                workload = command[0]\n\
+    +                ser_input = workload.model_dump_json()\n+                command\
+    \ = [\n+                    \"python\",\n+                    \"-m\",\n+     \
+    \               \"airflow.sdk.execution_time.execute_workload\",\n+          \
+    \          \"--json-string\",\n+                    ser_input,\n+            \
+    \    ]\n+            else:\n+                raise ValueError(\n+            \
+    \        f\"EcsExecutor doesn't know how to handle workload of type: {type(command[0])}\"\
+    \n+                )\n+\n         self.pending_tasks.append(\n             EcsQueuedTask(key,\
+    \ command, queue, executor_config or {}, 1, timezone.utcnow())\n         )\ndiff\
+    \ --git a/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/utils.py\
+    \ b/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/utils.py\n\
+    index 8024e6181db45..e255148ac32d9 100644\n--- a/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/utils.py\n\
+    +++ b/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/utils.py\n\
+    @@ -61,7 +61,7 @@ class EcsQueuedTask:\n \n     key: TaskInstanceKey\n     command:\
+    \ CommandType\n-    queue: str\n+    queue: str | None\n     executor_config:\
+    \ ExecutorConfigType\n     attempt_number: int\n     next_attempt_time: datetime.datetime\n\
+    diff --git a/providers/amazon/tests/unit/amazon/aws/executors/ecs/test_ecs_executor.py\
+    \ b/providers/amazon/tests/unit/amazon/aws/executors/ecs/test_ecs_executor.py\n\
+    index eae0b5346892c..074d2babd8524 100644\n--- a/providers/amazon/tests/unit/amazon/aws/executors/ecs/test_ecs_executor.py\n\
+    +++ b/providers/amazon/tests/unit/amazon/aws/executors/ecs/test_ecs_executor.py\n\
+    @@ -59,7 +59,7 @@\n \n from tests_common import RUNNING_TESTS_AGAINST_AIRFLOW_PACKAGES\n\
+    \ from tests_common.test_utils.config import conf_vars\n-from tests_common.test_utils.version_compat\
+    \ import AIRFLOW_V_2_10_PLUS\n+from tests_common.test_utils.version_compat import\
+    \ AIRFLOW_V_2_10_PLUS, AIRFLOW_V_3_0_PLUS\n \n pytestmark = pytest.mark.db_test\n\
+    \ \n@@ -412,6 +412,96 @@ def test_execute(self, change_state_mock, mock_airflow_key,\
+    \ mock_executor, mock_\n             airflow_key, TaskInstanceState.RUNNING, ARN1,\
+    \ remove_running=False\n         )\n \n+    @pytest.mark.skipif(not AIRFLOW_V_3_0_PLUS,\
+    \ reason=\"Test requires Airflow 3+\")\n+    @mock.patch(\"airflow.providers.amazon.aws.executors.ecs.ecs_executor.AwsEcsExecutor.change_state\"\
+    )\n+    def test_task_sdk(self, change_state_mock, mock_airflow_key, mock_executor,\
+    \ mock_cmd):\n+        \"\"\"Test task sdk execution from end-to-end.\"\"\"\n\
+    +        from airflow.executors.workloads import ExecuteTask\n+\n+        workload\
+    \ = mock.Mock(spec=ExecuteTask)\n+        workload.ti = mock.Mock(spec=TaskInstance)\n\
+    +        workload.ti.key = mock_airflow_key()\n+        tags_exec_config = [{\"\
+    key\": \"FOO\", \"value\": \"BAR\"}]\n+        workload.ti.executor_config = {\"\
+    tags\": tags_exec_config}\n+        ser_workload = json.dumps({\"test_key\": \"\
+    test_value\"})\n+        workload.model_dump_json.return_value = ser_workload\n\
+    +\n+        mock_executor.queue_workload(workload, mock.Mock())\n+\n+        mock_executor.ecs.run_task.return_value\
+    \ = {\n+            \"tasks\": [\n+                {\n+                    \"\
+    taskArn\": ARN1,\n+                    \"lastStatus\": \"\",\n+              \
+    \      \"desiredStatus\": \"\",\n+                    \"containers\": [{\"name\"\
+    : \"some-ecs-container\"}],\n+                }\n+            ],\n+          \
+    \  \"failures\": [],\n+        }\n+\n+        assert mock_executor.queued_tasks[workload.ti.key]\
+    \ == workload\n+        assert len(mock_executor.pending_tasks) == 0\n+      \
+    \  assert len(mock_executor.running) == 0\n+        mock_executor._process_workloads([workload])\n\
+    +        assert len(mock_executor.queued_tasks) == 0\n+        assert len(mock_executor.running)\
+    \ == 1\n+        assert workload.ti.key in mock_executor.running\n+        assert\
+    \ len(mock_executor.pending_tasks) == 1\n+        assert mock_executor.pending_tasks[0].command\
+    \ == [\n+            \"python\",\n+            \"-m\",\n+            \"airflow.sdk.execution_time.execute_workload\"\
+    ,\n+            \"--json-string\",\n+            '{\"test_key\": \"test_value\"\
+    }',\n+        ]\n+\n+        mock_executor.attempt_task_runs()\n+        mock_executor.ecs.run_task.assert_called_once()\n\
+    +        assert len(mock_executor.pending_tasks) == 0\n+        mock_executor.ecs.run_task.assert_called_once_with(\n\
+    +            cluster=\"some-cluster\",\n+            count=1,\n+            launchType=\"\
+    FARGATE\",\n+            platformVersion=\"LATEST\",\n+            taskDefinition=\"\
+    some-task-def\",\n+            tags=tags_exec_config,\n+            networkConfiguration={\n\
+    +                \"awsvpcConfiguration\": {\n+                    \"assignPublicIp\"\
+    : \"DISABLED\",\n+                    \"securityGroups\": [\"sg1\", \"sg2\"],\n\
+    +                    \"subnets\": [\"sub1\", \"sub2\"],\n+                },\n\
+    +            },\n+            overrides={\n+                \"containerOverrides\"\
+    : [\n+                    {\n+                        \"command\": [\n+      \
+    \                      \"python\",\n+                            \"-m\",\n+  \
+    \                          \"airflow.sdk.execution_time.execute_workload\",\n\
+    +                            \"--json-string\",\n+                           \
+    \ ser_workload,\n+                        ],\n+                        \"environment\"\
+    : [\n+                            {\n+                                \"name\"\
+    : \"AIRFLOW_IS_EXECUTOR_CONTAINER\",\n+                                \"value\"\
+    : \"true\",\n+                            },\n+                        ],\n+ \
+    \                       \"name\": \"container-name\",\n+                    },\n\
+    +                ],\n+            },\n+        )\n+\n+        # Task is stored\
+    \ in active worker.\n+        assert len(mock_executor.active_workers) == 1\n\
+    +        assert ARN1 in mock_executor.active_workers.task_by_key(workload.ti.key).task_arn\n\
+    +        change_state_mock.assert_called_once_with(\n+            workload.ti.key,\
+    \ TaskInstanceState.RUNNING, ARN1, remove_running=False\n+        )\n+\n     @mock.patch.object(ecs_executor,\
+    \ \"calculate_next_attempt_delay\", return_value=dt.timedelta(seconds=0))\n  \
+    \   def test_success_execute_api_exception(self, mock_backoff, mock_executor,\
+    \ mock_cmd):\n         \"\"\"Test what happens when ECS throws an exception, but\
+    \ ultimately runs the task.\"\"\"\ndiff --git a/providers/cncf/kubernetes/src/airflow/providers/cncf/kubernetes/executors/kubernetes_executor_utils.py\
+    \ b/providers/cncf/kubernetes/src/airflow/providers/cncf/kubernetes/executors/kubernetes_executor_utils.py\n\
+    index a59f1e47d1ba7..ceef834428928 100644\n--- a/providers/cncf/kubernetes/src/airflow/providers/cncf/kubernetes/executors/kubernetes_executor_utils.py\n\
+    +++ b/providers/cncf/kubernetes/src/airflow/providers/cncf/kubernetes/executors/kubernetes_executor_utils.py\n\
+    @@ -402,6 +402,7 @@ def run_next(self, next_job: KubernetesJobType) -> None:\n\
+    \                     \"python\",\n                     \"-m\",\n            \
+    \         \"airflow.sdk.execution_time.execute_workload\",\n+                \
+    \    \"--json-path\",\n                     \"/tmp/execute/input.json\",\n   \
+    \              ]\n             else:\ndiff --git a/providers/cncf/kubernetes/tests/unit/cncf/kubernetes/test_pod_generator.py\
+    \ b/providers/cncf/kubernetes/tests/unit/cncf/kubernetes/test_pod_generator.py\n\
+    index e4c9db066882f..efb826b3ea6de 100644\n--- a/providers/cncf/kubernetes/tests/unit/cncf/kubernetes/test_pod_generator.py\n\
+    +++ b/providers/cncf/kubernetes/tests/unit/cncf/kubernetes/test_pod_generator.py\n\
+    @@ -196,6 +196,7 @@ def test_pod_spec_for_task_sdk_runs(self, content_json, expected,\
+    \ data_file):\n                 \"python\",\n                 \"-m\",\n      \
+    \           \"airflow.sdk.execution_time.execute_workload\",\n+              \
+    \  \"--json-path\",\n                 \"/tmp/execute/input.json\",\n         \
+    \    ],\n             pod_override_object=None,\n@@ -226,7 +227,12 @@ def test_pod_spec_for_task_sdk_runs(self,\
+    \ content_json, expected, data_file):\n         assert volume == {\"emptyDir\"\
+    : {}, \"name\": \"execute-volume\"}\n \n         main_container = sanitized_result[\"\
+    spec\"][\"containers\"][0]\n-        assert main_container[\"command\"] == [\"\
+    python\", \"-m\", \"airflow.sdk.execution_time.execute_workload\"]\n+        assert\
+    \ main_container[\"command\"] == [\n+            \"python\",\n+            \"\
+    -m\",\n+            \"airflow.sdk.execution_time.execute_workload\",\n+      \
+    \      \"--json-path\",\n+        ]\n         assert main_container[\"args\"]\
+    \ == [\"/tmp/execute/input.json\"]\n \n     def test_from_obj_pod_override_object(self):\n\
+    diff --git a/task-sdk/src/airflow/sdk/execution_time/execute_workload.py b/task-sdk/src/airflow/sdk/execution_time/execute_workload.py\n\
+    index 5fd9d6669b763..56fd381c8aaa1 100644\n--- a/task-sdk/src/airflow/sdk/execution_time/execute_workload.py\n\
+    +++ b/task-sdk/src/airflow/sdk/execution_time/execute_workload.py\n@@ -35,9 +35,7\
+    \ @@\n log = structlog.get_logger(logger_name=__name__)\n \n \n-def execute_workload(input:\
+    \ str) -> None:\n-    from pydantic import TypeAdapter\n-\n+def execute_workload(workload)\
+    \ -> None:\n     from airflow.configuration import conf\n     from airflow.executors\
+    \ import workloads\n     from airflow.sdk.execution_time.supervisor import supervise\n\
+    @@ -48,13 +46,12 @@ def execute_workload(input: str) -> None:\n \n     configure_logging(output=sys.stdout.buffer,\
+    \ enable_pretty_log=False)\n \n-    decoder = TypeAdapter[workloads.All](workloads.All)\n\
+    -    workload = decoder.validate_json(input)\n-\n     if not isinstance(workload,\
+    \ workloads.ExecuteTask):\n-        raise ValueError(f\"We do not know how to\
+    \ handle {type(workload)}\")\n+        raise ValueError(f\"Executor does not know\
+    \ how to handle {type(workload)}\")\n \n     log.info(\"Executing workload\",\
+    \ workload=workload)\n+    server = conf.get(\"core\", \"execution_api_server_url\"\
+    )\n+    log.info(\"Connecting to server:\", server=server)\n \n     supervise(\n\
+    \         # This is the \"wrong\" ti type, but it duck types the same. TODO: Create\
+    \ a protocol for this.\n@@ -62,7 +59,7 @@ def execute_workload(input: str) ->\
+    \ None:\n         dag_rel_path=workload.dag_rel_path,\n         bundle_info=workload.bundle_info,\n\
+    \         token=workload.token,\n-        server=conf.get(\"core\", \"execution_api_server_url\"\
+    ),\n+        server=server,\n         log_path=workload.log_path,\n         #\
+    \ Include the output of the task to stdout too, so that in process logs can be\
+    \ read from via the\n         # kubeapi as pod logs.\n@@ -74,16 +71,44 @@ def\
+    \ main():\n     parser = argparse.ArgumentParser(\n         description=\"Execute\
+    \ a workload in a Containerised executor using the task SDK.\"\n     )\n-    parser.add_argument(\n\
+    -        \"input_file\", help=\"Path to the input JSON file containing the execution\
+    \ workload payload.\"\n+\n+    # Create a mutually exclusive group to ensure that\
+    \ only one of the flags is set\n+    group = parser.add_mutually_exclusive_group(required=True)\n\
+    +    group.add_argument(\n+        \"--json-path\",\n+        help=\"Path to the\
+    \ input JSON file containing the execution workload payload.\",\n+        type=str,\n\
+    +    )\n+    group.add_argument(\n+        \"--json-string\",\n+        help=\"\
+    The JSON string itself containing the execution workload payload.\",\n+      \
+    \  type=str,\n     )\n \n     args = parser.parse_args()\n \n-    with open(args.input_file)\
+    \ as file:\n-        input_data = file.read()\n+    from pydantic import TypeAdapter\n\
+    \ \n-    execute_workload(input_data)\n+    from airflow.executors import workloads\n\
+    +\n+    decoder = TypeAdapter[workloads.All](workloads.All)\n+    if args.json_path:\n\
+    +        try:\n+            with open(args.json_path) as file:\n+            \
+    \    input_data = file.read()\n+                workload = decoder.validate_json(input_data)\n\
+    +        except Exception as e:\n+            log.error(\"Failed to read file\"\
+    , error=str(e))\n+            sys.exit(1)\n+\n+    elif args.json_string:\n+ \
+    \       try:\n+            workload = decoder.validate_json(args.json_string)\n\
+    +        except Exception as e:\n+            log.error(\"Failed to parse input\
+    \ JSON string\", error=str(e))\n+            sys.exit(1)\n+\n+    execute_workload(workload)\n\
+    \ \n \n if __name__ == \"__main__\":\n\n\n--- Task ---\nBased on the PR details\
+    \ and the context from existing issues provided above, please generate the text\
+    \ (title and body) for a new, plausible GitHub issue that the pull request #48513\
+    \ appears to resolve. Output only the issue title and body in markdown format.\n"
+  diff: "diff --git a/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/ecs_executor.py\
+    \ b/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/ecs_executor.py\n\
+    index 3d9821ae25703..5d0460162dac1 100644\n--- a/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/ecs_executor.py\n\
+    +++ b/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/ecs_executor.py\n\
+    @@ -49,12 +49,16 @@\n     exponential_backoff_retry,\n )\n from airflow.providers.amazon.aws.hooks.ecs\
+    \ import EcsHook\n+from airflow.providers.amazon.version_compat import AIRFLOW_V_3_0_PLUS\n\
+    \ from airflow.stats import Stats\n from airflow.utils import timezone\n from\
+    \ airflow.utils.helpers import merge_dicts\n from airflow.utils.state import State\n\
+    \ \n if TYPE_CHECKING:\n+    from sqlalchemy.orm import Session\n+\n+    from\
+    \ airflow.executors import workloads\n     from airflow.models.taskinstance import\
+    \ TaskInstance, TaskInstanceKey\n     from airflow.providers.amazon.aws.executors.ecs.utils\
+    \ import (\n         CommandType,\n@@ -100,6 +104,11 @@ class AwsEcsExecutor(BaseExecutor):\n\
+    \     # AWS limits the maximum number of ARNs in the describe_tasks function.\n\
+    \     DESCRIBE_TASKS_BATCH_SIZE = 99\n \n+    if TYPE_CHECKING and AIRFLOW_V_3_0_PLUS:\n\
+    +        # In the v3 path, we store workloads, not commands as strings.\n+   \
+    \     # TODO: TaskSDK: move this type change into BaseExecutor\n+        queued_tasks:\
+    \ dict[TaskInstanceKey, workloads.All]  # type: ignore[assignment]\n+\n     def\
+    \ __init__(self, *args, **kwargs):\n         super().__init__(*args, **kwargs)\n\
+    \         self.active_workers: EcsTaskCollection = EcsTaskCollection()\n@@ -114,6\
+    \ +123,32 @@ def __init__(self, *args, **kwargs):\n \n         self.run_task_kwargs\
+    \ = self._load_run_kwargs()\n \n+    def queue_workload(self, workload: workloads.All,\
+    \ session: Session | None) -> None:\n+        from airflow.executors import workloads\n\
+    +\n+        if not isinstance(workload, workloads.ExecuteTask):\n+           \
+    \ raise RuntimeError(f\"{type(self)} cannot handle workloads of type {type(workload)}\"\
+    )\n+        ti = workload.ti\n+        self.queued_tasks[ti.key] = workload\n\
+    +\n+    def _process_workloads(self, workloads: list[workloads.All]) -> None:\n\
+    +        from airflow.executors.workloads import ExecuteTask\n+\n+        # Airflow\
+    \ V3 version\n+        for w in workloads:\n+            if not isinstance(w,\
+    \ ExecuteTask):\n+                raise RuntimeError(f\"{type(self)} cannot handle\
+    \ workloads of type {type(w)}\")\n+\n+            # TODO: AIP-72 handle populating\
+    \ tokens once https://github.com/apache/airflow/issues/45107 is handled.\n+  \
+    \          command = [w]\n+            key = w.ti.key\n+            queue = w.ti.queue\n\
+    +            executor_config = w.ti.executor_config or {}\n+\n+            del\
+    \ self.queued_tasks[key]\n+            self.execute_async(key=key, command=command,\
+    \ queue=queue, executor_config=executor_config)  # type: ignore[arg-type]\n+ \
+    \           self.running.add(key)\n+\n     def start(self):\n         \"\"\"Call\
+    \ this when the Executor is run for the first time by the scheduler.\"\"\"\n \
+    \        check_health = conf.getboolean(\n@@ -462,6 +497,24 @@ def execute_async(self,\
+    \ key: TaskInstanceKey, command: CommandType, queue=None,\n         \"\"\"Save\
+    \ the task to be executed in the next sync by inserting the commands into a queue.\"\
+    \"\"\n         if executor_config and (\"name\" in executor_config or \"command\"\
+    \ in executor_config):\n             raise ValueError('Executor Config should\
+    \ never override \"name\" or \"command\"')\n+        if len(command) == 1:\n+\
+    \            from airflow.executors.workloads import ExecuteTask\n+\n+       \
+    \     if isinstance(command[0], ExecuteTask):\n+                workload = command[0]\n\
+    +                ser_input = workload.model_dump_json()\n+                command\
+    \ = [\n+                    \"python\",\n+                    \"-m\",\n+     \
+    \               \"airflow.sdk.execution_time.execute_workload\",\n+          \
+    \          \"--json-string\",\n+                    ser_input,\n+            \
+    \    ]\n+            else:\n+                raise ValueError(\n+            \
+    \        f\"EcsExecutor doesn't know how to handle workload of type: {type(command[0])}\"\
+    \n+                )\n+\n         self.pending_tasks.append(\n             EcsQueuedTask(key,\
+    \ command, queue, executor_config or {}, 1, timezone.utcnow())\n         )\ndiff\
+    \ --git a/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/utils.py\
+    \ b/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/utils.py\n\
+    index 8024e6181db45..e255148ac32d9 100644\n--- a/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/utils.py\n\
+    +++ b/providers/amazon/src/airflow/providers/amazon/aws/executors/ecs/utils.py\n\
+    @@ -61,7 +61,7 @@ class EcsQueuedTask:\n \n     key: TaskInstanceKey\n     command:\
+    \ CommandType\n-    queue: str\n+    queue: str | None\n     executor_config:\
+    \ ExecutorConfigType\n     attempt_number: int\n     next_attempt_time: datetime.datetime\n\
+    diff --git a/providers/amazon/tests/unit/amazon/aws/executors/ecs/test_ecs_executor.py\
+    \ b/providers/amazon/tests/unit/amazon/aws/executors/ecs/test_ecs_executor.py\n\
+    index eae0b5346892c..074d2babd8524 100644\n--- a/providers/amazon/tests/unit/amazon/aws/executors/ecs/test_ecs_executor.py\n\
+    +++ b/providers/amazon/tests/unit/amazon/aws/executors/ecs/test_ecs_executor.py\n\
+    @@ -59,7 +59,7 @@\n \n from tests_common import RUNNING_TESTS_AGAINST_AIRFLOW_PACKAGES\n\
+    \ from tests_common.test_utils.config import conf_vars\n-from tests_common.test_utils.version_compat\
+    \ import AIRFLOW_V_2_10_PLUS\n+from tests_common.test_utils.version_compat import\
+    \ AIRFLOW_V_2_10_PLUS, AIRFLOW_V_3_0_PLUS\n \n pytestmark = pytest.mark.db_test\n\
+    \ \n@@ -412,6 +412,96 @@ def test_execute(self, change_state_mock, mock_airflow_key,\
+    \ mock_executor, mock_\n             airflow_key, TaskInstanceState.RUNNING, ARN1,\
+    \ remove_running=False\n         )\n \n+    @pytest.mark.skipif(not AIRFLOW_V_3_0_PLUS,\
+    \ reason=\"Test requires Airflow 3+\")\n+    @mock.patch(\"airflow.providers.amazon.aws.executors.ecs.ecs_executor.AwsEcsExecutor.change_state\"\
+    )\n+    def test_task_sdk(self, change_state_mock, mock_airflow_key, mock_executor,\
+    \ mock_cmd):\n+        \"\"\"Test task sdk execution from end-to-end.\"\"\"\n\
+    +        from airflow.executors.workloads import ExecuteTask\n+\n+        workload\
+    \ = mock.Mock(spec=ExecuteTask)\n+        workload.ti = mock.Mock(spec=TaskInstance)\n\
+    +        workload.ti.key = mock_airflow_key()\n+        tags_exec_config = [{\"\
+    key\": \"FOO\", \"value\": \"BAR\"}]\n+        workload.ti.executor_config = {\"\
+    tags\": tags_exec_config}\n+        ser_workload = json.dumps({\"test_key\": \"\
+    test_value\"})\n+        workload.model_dump_json.return_value = ser_workload\n\
+    +\n+        mock_executor.queue_workload(workload, mock.Mock())\n+\n+        mock_executor.ecs.run_task.return_value\
+    \ = {\n+            \"tasks\": [\n+                {\n+                    \"\
+    taskArn\": ARN1,\n+                    \"lastStatus\": \"\",\n+              \
+    \      \"desiredStatus\": \"\",\n+                    \"containers\": [{\"name\"\
+    : \"some-ecs-container\"}],\n+                }\n+            ],\n+          \
+    \  \"failures\": [],\n+        }\n+\n+        assert mock_executor.queued_tasks[workload.ti.key]\
+    \ == workload\n+        assert len(mock_executor.pending_tasks) == 0\n+      \
+    \  assert len(mock_executor.running) == 0\n+        mock_executor._process_workloads([workload])\n\
+    +        assert len(mock_executor.queued_tasks) == 0\n+        assert len(mock_executor.running)\
+    \ == 1\n+        assert workload.ti.key in mock_executor.running\n+        assert\
+    \ len(mock_executor.pending_tasks) == 1\n+        assert mock_executor.pending_tasks[0].command\
+    \ == [\n+            \"python\",\n+            \"-m\",\n+            \"airflow.sdk.execution_time.execute_workload\"\
+    ,\n+            \"--json-string\",\n+            '{\"test_key\": \"test_value\"\
+    }',\n+        ]\n+\n+        mock_executor.attempt_task_runs()\n+        mock_executor.ecs.run_task.assert_called_once()\n\
+    +        assert len(mock_executor.pending_tasks) == 0\n+        mock_executor.ecs.run_task.assert_called_once_with(\n\
+    +            cluster=\"some-cluster\",\n+            count=1,\n+            launchType=\"\
+    FARGATE\",\n+            platformVersion=\"LATEST\",\n+            taskDefinition=\"\
+    some-task-def\",\n+            tags=tags_exec_config,\n+            networkConfiguration={\n\
+    +                \"awsvpcConfiguration\": {\n+                    \"assignPublicIp\"\
+    : \"DISABLED\",\n+                    \"securityGroups\": [\"sg1\", \"sg2\"],\n\
+    +                    \"subnets\": [\"sub1\", \"sub2\"],\n+                },\n\
+    +            },\n+            overrides={\n+                \"containerOverrides\"\
+    : [\n+                    {\n+                        \"command\": [\n+      \
+    \                      \"python\",\n+                            \"-m\",\n+  \
+    \                          \"airflow.sdk.execution_time.execute_workload\",\n\
+    +                            \"--json-string\",\n+                           \
+    \ ser_workload,\n+                        ],\n+                        \"environment\"\
+    : [\n+                            {\n+                                \"name\"\
+    : \"AIRFLOW_IS_EXECUTOR_CONTAINER\",\n+                                \"value\"\
+    : \"true\",\n+                            },\n+                        ],\n+ \
+    \                       \"name\": \"container-name\",\n+                    },\n\
+    +                ],\n+            },\n+        )\n+\n+        # Task is stored\
+    \ in active worker.\n+        assert len(mock_executor.active_workers) == 1\n\
+    +        assert ARN1 in mock_executor.active_workers.task_by_key(workload.ti.key).task_arn\n\
+    +        change_state_mock.assert_called_once_with(\n+            workload.ti.key,\
+    \ TaskInstanceState.RUNNING, ARN1, remove_running=False\n+        )\n+\n     @mock.patch.object(ecs_executor,\
+    \ \"calculate_next_attempt_delay\", return_value=dt.timedelta(seconds=0))\n  \
+    \   def test_success_execute_api_exception(self, mock_backoff, mock_executor,\
+    \ mock_cmd):\n         \"\"\"Test what happens when ECS throws an exception, but\
+    \ ultimately runs the task.\"\"\"\ndiff --git a/providers/cncf/kubernetes/src/airflow/providers/cncf/kubernetes/executors/kubernetes_executor_utils.py\
+    \ b/providers/cncf/kubernetes/src/airflow/providers/cncf/kubernetes/executors/kubernetes_executor_utils.py\n\
+    index a59f1e47d1ba7..ceef834428928 100644\n--- a/providers/cncf/kubernetes/src/airflow/providers/cncf/kubernetes/executors/kubernetes_executor_utils.py\n\
+    +++ b/providers/cncf/kubernetes/src/airflow/providers/cncf/kubernetes/executors/kubernetes_executor_utils.py\n\
+    @@ -402,6 +402,7 @@ def run_next(self, next_job: KubernetesJobType) -> None:\n\
+    \                     \"python\",\n                     \"-m\",\n            \
+    \         \"airflow.sdk.execution_time.execute_workload\",\n+                \
+    \    \"--json-path\",\n                     \"/tmp/execute/input.json\",\n   \
+    \              ]\n             else:\ndiff --git a/providers/cncf/kubernetes/tests/unit/cncf/kubernetes/test_pod_generator.py\
+    \ b/providers/cncf/kubernetes/tests/unit/cncf/kubernetes/test_pod_generator.py\n\
+    index e4c9db066882f..efb826b3ea6de 100644\n--- a/providers/cncf/kubernetes/tests/unit/cncf/kubernetes/test_pod_generator.py\n\
+    +++ b/providers/cncf/kubernetes/tests/unit/cncf/kubernetes/test_pod_generator.py\n\
+    @@ -196,6 +196,7 @@ def test_pod_spec_for_task_sdk_runs(self, content_json, expected,\
+    \ data_file):\n                 \"python\",\n                 \"-m\",\n      \
+    \           \"airflow.sdk.execution_time.execute_workload\",\n+              \
+    \  \"--json-path\",\n                 \"/tmp/execute/input.json\",\n         \
+    \    ],\n             pod_override_object=None,\n@@ -226,7 +227,12 @@ def test_pod_spec_for_task_sdk_runs(self,\
+    \ content_json, expected, data_file):\n         assert volume == {\"emptyDir\"\
+    : {}, \"name\": \"execute-volume\"}\n \n         main_container = sanitized_result[\"\
+    spec\"][\"containers\"][0]\n-        assert main_container[\"command\"] == [\"\
+    python\", \"-m\", \"airflow.sdk.execution_time.execute_workload\"]\n+        assert\
+    \ main_container[\"command\"] == [\n+            \"python\",\n+            \"\
+    -m\",\n+            \"airflow.sdk.execution_time.execute_workload\",\n+      \
+    \      \"--json-path\",\n+        ]\n         assert main_container[\"args\"]\
+    \ == [\"/tmp/execute/input.json\"]\n \n     def test_from_obj_pod_override_object(self):\n\
+    diff --git a/task-sdk/src/airflow/sdk/execution_time/execute_workload.py b/task-sdk/src/airflow/sdk/execution_time/execute_workload.py\n\
+    index 5fd9d6669b763..56fd381c8aaa1 100644\n--- a/task-sdk/src/airflow/sdk/execution_time/execute_workload.py\n\
+    +++ b/task-sdk/src/airflow/sdk/execution_time/execute_workload.py\n@@ -35,9 +35,7\
+    \ @@\n log = structlog.get_logger(logger_name=__name__)\n \n \n-def execute_workload(input:\
+    \ str) -> None:\n-    from pydantic import TypeAdapter\n-\n+def execute_workload(workload)\
+    \ -> None:\n     from airflow.configuration import conf\n     from airflow.executors\
+    \ import workloads\n     from airflow.sdk.execution_time.supervisor import supervise\n\
+    @@ -48,13 +46,12 @@ def execute_workload(input: str) -> None:\n \n     configure_logging(output=sys.stdout.buffer,\
+    \ enable_pretty_log=False)\n \n-    decoder = TypeAdapter[workloads.All](workloads.All)\n\
+    -    workload = decoder.validate_json(input)\n-\n     if not isinstance(workload,\
+    \ workloads.ExecuteTask):\n-        raise ValueError(f\"We do not know how to\
+    \ handle {type(workload)}\")\n+        raise ValueError(f\"Executor does not know\
+    \ how to handle {type(workload)}\")\n \n     log.info(\"Executing workload\",\
+    \ workload=workload)\n+    server = conf.get(\"core\", \"execution_api_server_url\"\
+    )\n+    log.info(\"Connecting to server:\", server=server)\n \n     supervise(\n\
+    \         # This is the \"wrong\" ti type, but it duck types the same. TODO: Create\
+    \ a protocol for this.\n@@ -62,7 +59,7 @@ def execute_workload(input: str) ->\
+    \ None:\n         dag_rel_path=workload.dag_rel_path,\n         bundle_info=workload.bundle_info,\n\
+    \         token=workload.token,\n-        server=conf.get(\"core\", \"execution_api_server_url\"\
+    ),\n+        server=server,\n         log_path=workload.log_path,\n         #\
+    \ Include the output of the task to stdout too, so that in process logs can be\
+    \ read from via the\n         # kubeapi as pod logs.\n@@ -74,16 +71,44 @@ def\
+    \ main():\n     parser = argparse.ArgumentParser(\n         description=\"Execute\
+    \ a workload in a Containerised executor using the task SDK.\"\n     )\n-    parser.add_argument(\n\
+    -        \"input_file\", help=\"Path to the input JSON file containing the execution\
+    \ workload payload.\"\n+\n+    # Create a mutually exclusive group to ensure that\
+    \ only one of the flags is set\n+    group = parser.add_mutually_exclusive_group(required=True)\n\
+    +    group.add_argument(\n+        \"--json-path\",\n+        help=\"Path to the\
+    \ input JSON file containing the execution workload payload.\",\n+        type=str,\n\
+    +    )\n+    group.add_argument(\n+        \"--json-string\",\n+        help=\"\
+    The JSON string itself containing the execution workload payload.\",\n+      \
+    \  type=str,\n     )\n \n     args = parser.parse_args()\n \n-    with open(args.input_file)\
+    \ as file:\n-        input_data = file.read()\n+    from pydantic import TypeAdapter\n\
+    \ \n-    execute_workload(input_data)\n+    from airflow.executors import workloads\n\
+    +\n+    decoder = TypeAdapter[workloads.All](workloads.All)\n+    if args.json_path:\n\
+    +        try:\n+            with open(args.json_path) as file:\n+            \
+    \    input_data = file.read()\n+                workload = decoder.validate_json(input_data)\n\
+    +        except Exception as e:\n+            log.error(\"Failed to read file\"\
+    , error=str(e))\n+            sys.exit(1)\n+\n+    elif args.json_string:\n+ \
+    \       try:\n+            workload = decoder.validate_json(args.json_string)\n\
+    +        except Exception as e:\n+            log.error(\"Failed to parse input\
+    \ JSON string\", error=str(e))\n+            sys.exit(1)\n+\n+    execute_workload(workload)\n\
+    \ \n \n if __name__ == \"__main__\":\n"
+- repository: aws/aws-cli
+  pr:
+    number: 9420
+    title: ' [WIP] Fix installing setup dependencies on newer versions of pip'
+    url: https://github.com/aws/aws-cli/pull/9420
+  status: success
+  synthesized_issue: |-
+    # Error installing AWS CLI v1 on newer Python versions
+
+    The AWS CLI v1 bundled installer fails when trying to install on newer Python versions (e.g. 3.12). The installation process throws errors related to missing `setuptools` module and issues with the `--find-links` argument used to install packages from the local bundle.
+
+    Specifically, the following errors are encountered:
+
+    1. `ModuleNotFoundError: No module named 'setuptools'`: Newer Python versions no longer include `setuptools` by default, which is required during the installation process.
+
+    2. `ValueError: non-local file URIs are not supported on this platform: 'file://.`: The `--find-links file://` syntax used to install packages from the local bundle is causing issues on certain platforms.
+
+    The AWS CLI v1 bundled installer needs to be updated to handle these scenarios and ensure a smooth installation experience across different Python versions, including the latest releases.
+  llm_prompt: "Repository: aws/aws-cli\n\n\n--- Context: Existing Open Issues ---\n\
+    Issue 1 (Number: 9328):\n  Title: put-image fails when image already exists on\
+    \ repository with tag and is immutable\n  Body (Preview):\n### Describe the bug\n\
+    \nFollowing up on this because currently `put-image` will error out when a build\
+    \ doesn't change the built image and the tag already exists with that image:\n\
+    https://github.com/aws/aws-sdk/issues/750\n\n### Regression Issue\n\n- [ ] Select\
+    \ this option if this issue appears to be a regression.\n\n### Expected Behavior\n\
+    \nHave an option to ignore this or an exit code to indicate this issue, because\
+    \ it appears that currently the status code for all errors is `254` so there's\
+    \ no way to tel...\n----------\nIssue 2 (Number: 9402):\n  Title: aws configure\
+    \ sso leads to UnicodeEncodeError: 'idna' codec can't encode character '\\x2e'\
+    \ in position 0: label empty\n  Body: [Omitted due to length (4516 > 2000 chars)]\n\
+    ----------\nIssue 3 (Number: 9417):\n  Title: Ability to specify / configure where\
+    \ the alias config file (`~/.aws/cli/alias`) is located\n  Body (Preview):\n###\
+    \ Describe the feature\n\nThe class for `AliasLoader` allows you to send to it\
+    \ a location of the file.\n\nhttps://github.com/aws/aws-cli/blob/a5b944a28a93967810e25563044450a6de7e64ce/awscli/alias.py#L34\n\
+    \nHowever, in practice, the `CliDriver` does not make use of this.\n\nhttps://github.com/aws/aws-cli/blob/a5b944a28a93967810e25563044450a6de7e64ce/awscli/clidriver.py#L106\n\
+    \nOnly the unit tests do make use of this.\n\nhttps://github.com/aws/aws-cli/blob/a5b944a28a93967810e25563044450a6de7e64ce/tests/unit...\n\
+    ----------\nIssue 4 (Number: 9372):\n  Title: `aws lambda wizard new-function`\
+    \ presents outdated list of runtimes\n  Body (Preview):\n### Describe the bug\n\
+    \nThe command `aws lambda wizard new-function` initially asks for a function name\
+    \ and then a runtime. The latter is presented as a combo box with a several options,\
+    \ many of which are obsolete.\n\n### Regression Issue\n\n- [ ] Select this option\
+    \ if this issue appears to be a regression.\n\n### Expected Behavior\n\nThe list\
+    \ of runtimes should be the list of currently-supported runtimes.\n\n### Current\
+    \ Behavior\n\nThe list of runtimes appears to be hard-coded here: https://github.com/aws/aw...\n\
+    ----------\nIssue 5 (Number: 9420):\n  Title:  [WIP] Fix installing setup dependencies\
+    \ on newer versions of pip\n  Body (Preview):\n_WIP: Still figuring out testing\
+    \ automation, but wanted to put this up early in case anyone has feedback on the\
+    \ approach_\n\n*Issue #, if available:* CLI-6153\n\nDon't think we have a GitHub\
+    \ issue, but this has been reported on a few Q&A sites:\n1. https://askubuntu.com/questions/1513592/installing-aws-cli-v1-on-ubuntu-24-does-not-work-but-works-fine-on-ubuntu-22\
+    \ \n2. https://stackoverflow.com/questions/77658049/getting-pip-error-while-installing-aws-cli\n\
+    \n\n*Description of changes:*\n1. When i...\n----------\n(1 issue bodies omitted\
+    \ due to length limit of 2000 chars.)\n\n--- Pull Request #9420 Details ---\n\
+    PR Title:  [WIP] Fix installing setup dependencies on newer versions of pip\n\n\
+    PR Body:\n_WIP: Still figuring out testing automation, but wanted to put this\
+    \ up early in case anyone has feedback on the approach_\n\n*Issue #, if available:*\
+    \ CLI-6153\n\nDon't think we have a GitHub issue, but this has been reported on\
+    \ a few Q&A sites:\n1. https://askubuntu.com/questions/1513592/installing-aws-cli-v1-on-ubuntu-24-does-not-work-but-works-fine-on-ubuntu-22\
+    \ \n2. https://stackoverflow.com/questions/77658049/getting-pip-error-while-installing-aws-cli\n\
+    \n\n*Description of changes:*\n1. When installing the CLI V1 via the bundled installer,\
+    \ we use the `--find-links file://{local path}` syntax to install the packages\
+    \ from the bundle, rather than PyPI. At some point (not apparent from pip's changelog,\
+    \ still trying to pinpoint), this started throwing `ValueError: non-local file\
+    \ URIs are not supported on this platform: 'file://.`. \n    * To address this,\
+    \ I removed the `file://` syntax since `--find-links` can accept local paths (see\
+    \ [example 10](https://pip.pypa.io/en/stable/cli/pip_install/#examples) on `pip\
+    \ install` docs).\n2. When testing this on 3.12, installing the bundle fails with\
+    \ `ModuleNotFoundError: No module named 'setuptools'` since it's no longer included\
+    \ by default.\n    * To address this, I added `setuptools` to our `BUILDTIME_DEPS`\
+    \ that we install first.\n    * I struggled to install `setuptools` from sdist,\
+    \ which looks like it needs to bootstrap itself. I switched to wheels to alleviate\
+    \ this, though just for the `BUILDTIME_DEPS` to start. https://github.com/aws/aws-cli/pull/4756\
+    \ alluded to this as future work.\n\n### Testing\nWIP - testing manually on Mac\
+    \ for 3.8 to 3.12. Want to take a stab at automating this though, since it's tedious\
+    \ to cover OS+Python versions manually.\n\nBy submitting this pull request, I\
+    \ confirm that you can use, modify, copy, and redistribute this contribution,\
+    \ under the terms of your choice.\n\n\n\n--- Issue Comments ---\n\n## [Codecov](https://app.codecov.io/gh/aws/aws-cli/pull/9420?dropdown=coverage&src=pr&el=h1&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=aws)\
+    \ Report\nAll modified and coverable lines are covered by tests :white_check_mark:\n\
+    > Project coverage is 93.39%. Comparing base [(`5f07db1`)](https://app.codecov.io/gh/aws/aws-cli/commit/5f07db17488b9cc5ef04b5b751d4cac8f71e1a8c?dropdown=coverage&el=desc&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=aws)\
+    \ to head [(`dfe09a0`)](https://app.codecov.io/gh/aws/aws-cli/commit/dfe09a085ceb7411d1715e2dea6545d8c9fe8792?dropdown=coverage&el=desc&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=aws).\n\
+    > Report is 41 commits behind head on develop.\n\n<details><summary>Additional\
+    \ details and impacted files</summary>\n\n\n```diff\n@@           Coverage Diff\
+    \            @@\n##           develop    #9420   +/-   ##\n========================================\n\
+    \  Coverage    93.39%   93.39%           \n========================================\n\
+    \  Files          210      210           \n  Lines        16983    16983     \
+    \      \n========================================\n  Hits         15861    15861\
+    \           \n  Misses        1122     1122           \n```\n\n</details>\n\n\
+    [:umbrella: View full report in Codecov by Sentry](https://app.codecov.io/gh/aws/aws-cli/pull/9420?dropdown=coverage&src=pr&el=continue&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=aws).\
+    \   \n:loudspeaker: Have feedback on the report? [Share it here](https://about.codecov.io/codecov-pr-comment-feedback/?utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=aws).\n\
+    \n<details><summary> :rocket: New features to boost your workflow: </summary>\n\
+    \n- :snowflake: [Test Analytics](https://docs.codecov.com/docs/test-analytics):\
+    \ Detect flaky tests, report on failures, and find test suite problems.\n</details>\n\
+    \n\n--- Commit Messages ---\n\nFix installing setup dependencies on newer versions\
+    \ of pip\n\n\n--- Diff ---\n\ndiff --git a/.changes/next-release/enhancement-bundledinstaller-63856.json\
+    \ b/.changes/next-release/enhancement-bundledinstaller-63856.json\nnew file mode\
+    \ 100644\nindex 000000000000..788db42894c1\n--- /dev/null\n+++ b/.changes/next-release/enhancement-bundledinstaller-63856.json\n\
+    @@ -0,0 +1,5 @@\n+{\n+  \"type\": \"bugfix\",\n+  \"category\": \"bundled-installer\"\
+    ,\n+  \"description\": \"Fix installing setup dependencies on newer versions of\
+    \ pip\"\n+}\ndiff --git a/scripts/install b/scripts/install\nindex 9d4de2b13bcb..4634a5ee3fd7\
+    \ 100755\n--- a/scripts/install\n+++ b/scripts/install\n@@ -149,7 +149,7 @@ def\
+    \ pip_install_packages(install_dir):\n \n     with cd(PACKAGES_DIR):\n       \
+    \  run(\n-            '{} -m pip install {} --find-links file://{} {}'.format(\n\
+    +            '{} -m pip install {} --find-links {} {}'.format(\n             \
+    \    python, INSTALL_ARGS, PACKAGES_DIR, cli_tarball\n             )\n       \
+    \  )\n@@ -159,24 +159,17 @@ def _install_setup_deps(python, setup_package_dir):\n\
+    \     # Some packages declare `setup_requires`, which is a list of dependencies\n\
+    \     # to be used at setup time. These need to be installed before anything\n\
+    \     # else, and pip doesn't manage them.  We have to manage this ourselves\n\
+    -    # so for now we're explicitly installing the one setup_requires package\n\
+    -    # we need.  This comes from python-dateutils.\n-    setuptools_scm_tarball\
+    \ = _get_package_tarball(\n-        setup_package_dir, 'setuptools_scm'\n-   \
+    \ )\n-    run(\n-        (\n-            '{} -m pip install --no-binary :all:\
+    \ --no-cache-dir --no-index '\n-            '--find-links file://{} {}'\n-   \
+    \     ).format(python, setup_package_dir, setuptools_scm_tarball)\n-    )\n- \
+    \   wheel_tarball = _get_package_tarball(setup_package_dir, 'wheel')\n-    run(\n\
+    -        (\n-            '{} -m pip install --no-binary :all: --no-cache-dir --no-index\
+    \ '\n-            '--find-links file://{} {}'\n-        ).format(python, setup_package_dir,\
+    \ wheel_tarball)\n-    )\n+    # so for now we're explicitly installing setuptools_scm\
+    \ which is needed for\n+    # python-dateutils. We're also now installing setuptools\
+    \ since its no\n+    # longer installed alongside pip for 3.12+.\n+    for package\
+    \ in ['setuptools-', 'wheel', 'setuptools_scm']:\n+        # these are actually\
+    \ wheels, but the bundle lookup logic is the same\n+        tarball = _get_package_tarball(setup_package_dir,\
+    \ package)\n+        run(\n+            '{} -m pip install {} --find-links {}\
+    \ {}'.format(\n+                python, INSTALL_ARGS, PACKAGES_DIR, tarball\n\
+    +            )\n+        )\n \n \n def create_symlink(real_location, symlink_name):\n\
+    diff --git a/scripts/make-bundle b/scripts/make-bundle\nindex 6ca3dbbcf595..c9a5863dd50b\
+    \ 100755\n--- a/scripts/make-bundle\n+++ b/scripts/make-bundle\n@@ -33,8 +33,9\
+    \ @@ PINNED_RUNTIME_DEPS = [\n     ('colorama', '0.4.5'),\n ]\n BUILDTIME_DEPS\
+    \ = [\n+    ('setuptools', '75.3.2'),  # 75.4 dropped 3.8 support\n     ('setuptools-scm',\
+    \ '3.3.3'),\n-    ('wheel', '0.33.6'),\n+    ('wheel', '0.45.1'),  # 46.0 dropped\
+    \ 3.8 support\n ]\n PIP_DOWNLOAD_ARGS = '--no-build-isolation --no-binary :all:'\n\
+    \ \n@@ -84,6 +85,16 @@ def download_package_tarballs(dirname, packages):\n   \
+    \          ))\n \n \n+def download_package_wheels(dirname, packages):\n+    with\
+    \ cd(dirname):\n+        for package, package_version in packages:\n+        \
+    \    run(\n+                '%s -m pip download %s==%s --no-build-isolation '\n\
+    +                '--only-binary :all:'\n+                % (sys.executable, package,\
+    \ package_version)\n+            )\n+\n+\n def download_cli_deps(scratch_dir,\
+    \ packages):\n     # pip download will always download a more recent version of\
+    \ a package\n     # even if one exists locally. The list of packages supplied\
+    \ in `packages`\n@@ -174,9 +185,10 @@ def main():\n     # manually install them.\
+    \ We isolate them to a particular directory so we\n     # can run the install\
+    \ before the things they're dependent on. We have to do\n     # this because pip\
+    \ won't actually find them since it doesn't handle build\n-    # dependencies.\n\
+    +    # dependencies. We use wheels for this, to avoid bootstrapping setuptools\n\
+    +    # in 3.12+ where its no longer included by default.\n     setup_dir = os.path.join(package_dir,\
+    \ 'setup')\n-    download_package_tarballs(\n+    download_package_wheels(\n \
+    \        setup_dir,\n         packages=BUILDTIME_DEPS,\n     )\n\n\n--- Task ---\n\
+    Based on the PR details and the context from existing issues provided above, please\
+    \ generate the text (title and body) for a new, plausible GitHub issue that the\
+    \ pull request #9420 appears to resolve. Output only the issue title and body\
+    \ in markdown format.\n"
+  diff: "diff --git a/.changes/next-release/enhancement-bundledinstaller-63856.json\
+    \ b/.changes/next-release/enhancement-bundledinstaller-63856.json\nnew file mode\
+    \ 100644\nindex 000000000000..788db42894c1\n--- /dev/null\n+++ b/.changes/next-release/enhancement-bundledinstaller-63856.json\n\
+    @@ -0,0 +1,5 @@\n+{\n+  \"type\": \"bugfix\",\n+  \"category\": \"bundled-installer\"\
+    ,\n+  \"description\": \"Fix installing setup dependencies on newer versions of\
+    \ pip\"\n+}\ndiff --git a/scripts/install b/scripts/install\nindex 9d4de2b13bcb..4634a5ee3fd7\
+    \ 100755\n--- a/scripts/install\n+++ b/scripts/install\n@@ -149,7 +149,7 @@ def\
+    \ pip_install_packages(install_dir):\n \n     with cd(PACKAGES_DIR):\n       \
+    \  run(\n-            '{} -m pip install {} --find-links file://{} {}'.format(\n\
+    +            '{} -m pip install {} --find-links {} {}'.format(\n             \
+    \    python, INSTALL_ARGS, PACKAGES_DIR, cli_tarball\n             )\n       \
+    \  )\n@@ -159,24 +159,17 @@ def _install_setup_deps(python, setup_package_dir):\n\
+    \     # Some packages declare `setup_requires`, which is a list of dependencies\n\
+    \     # to be used at setup time. These need to be installed before anything\n\
+    \     # else, and pip doesn't manage them.  We have to manage this ourselves\n\
+    -    # so for now we're explicitly installing the one setup_requires package\n\
+    -    # we need.  This comes from python-dateutils.\n-    setuptools_scm_tarball\
+    \ = _get_package_tarball(\n-        setup_package_dir, 'setuptools_scm'\n-   \
+    \ )\n-    run(\n-        (\n-            '{} -m pip install --no-binary :all:\
+    \ --no-cache-dir --no-index '\n-            '--find-links file://{} {}'\n-   \
+    \     ).format(python, setup_package_dir, setuptools_scm_tarball)\n-    )\n- \
+    \   wheel_tarball = _get_package_tarball(setup_package_dir, 'wheel')\n-    run(\n\
+    -        (\n-            '{} -m pip install --no-binary :all: --no-cache-dir --no-index\
+    \ '\n-            '--find-links file://{} {}'\n-        ).format(python, setup_package_dir,\
+    \ wheel_tarball)\n-    )\n+    # so for now we're explicitly installing setuptools_scm\
+    \ which is needed for\n+    # python-dateutils. We're also now installing setuptools\
+    \ since its no\n+    # longer installed alongside pip for 3.12+.\n+    for package\
+    \ in ['setuptools-', 'wheel', 'setuptools_scm']:\n+        # these are actually\
+    \ wheels, but the bundle lookup logic is the same\n+        tarball = _get_package_tarball(setup_package_dir,\
+    \ package)\n+        run(\n+            '{} -m pip install {} --find-links {}\
+    \ {}'.format(\n+                python, INSTALL_ARGS, PACKAGES_DIR, tarball\n\
+    +            )\n+        )\n \n \n def create_symlink(real_location, symlink_name):\n\
+    diff --git a/scripts/make-bundle b/scripts/make-bundle\nindex 6ca3dbbcf595..c9a5863dd50b\
+    \ 100755\n--- a/scripts/make-bundle\n+++ b/scripts/make-bundle\n@@ -33,8 +33,9\
+    \ @@ PINNED_RUNTIME_DEPS = [\n     ('colorama', '0.4.5'),\n ]\n BUILDTIME_DEPS\
+    \ = [\n+    ('setuptools', '75.3.2'),  # 75.4 dropped 3.8 support\n     ('setuptools-scm',\
+    \ '3.3.3'),\n-    ('wheel', '0.33.6'),\n+    ('wheel', '0.45.1'),  # 46.0 dropped\
+    \ 3.8 support\n ]\n PIP_DOWNLOAD_ARGS = '--no-build-isolation --no-binary :all:'\n\
+    \ \n@@ -84,6 +85,16 @@ def download_package_tarballs(dirname, packages):\n   \
+    \          ))\n \n \n+def download_package_wheels(dirname, packages):\n+    with\
+    \ cd(dirname):\n+        for package, package_version in packages:\n+        \
+    \    run(\n+                '%s -m pip download %s==%s --no-build-isolation '\n\
+    +                '--only-binary :all:'\n+                % (sys.executable, package,\
+    \ package_version)\n+            )\n+\n+\n def download_cli_deps(scratch_dir,\
+    \ packages):\n     # pip download will always download a more recent version of\
+    \ a package\n     # even if one exists locally. The list of packages supplied\
+    \ in `packages`\n@@ -174,9 +185,10 @@ def main():\n     # manually install them.\
+    \ We isolate them to a particular directory so we\n     # can run the install\
+    \ before the things they're dependent on. We have to do\n     # this because pip\
+    \ won't actually find them since it doesn't handle build\n-    # dependencies.\n\
+    +    # dependencies. We use wheels for this, to avoid bootstrapping setuptools\n\
+    +    # in 3.12+ where its no longer included by default.\n     setup_dir = os.path.join(package_dir,\
+    \ 'setup')\n-    download_package_tarballs(\n+    download_package_wheels(\n \
+    \        setup_dir,\n         packages=BUILDTIME_DEPS,\n     )\n"
+- repository: borgbackup/borg
+  pr:
+    number: 8714
+    title: 'implement padme chunk size obfuscation (SPEC 250), fixes #8705'
+    url: https://github.com/borgbackup/borg/pull/8714
+  status: success
+  synthesized_issue: |-
+    # Add support for Padmé chunk size obfuscation
+
+    Borg currently lacks an option to obfuscate the compressed chunk sizes using a deterministic padding algorithm. This can potentially reveal information about the compressed data through the sizes of the compressed chunks.
+
+    It would be beneficial to have an option to apply the Padmé padding algorithm to the compressed chunk sizes. This algorithm pads the compressed size to a sum of powers of 2, limiting the overhead to a maximum of 12%. This would help obfuscate the compressed chunk sizes in a deterministic manner, enhancing the security and privacy of the backup data.
+
+    Implementing Padmé padding as a new obfuscation option would provide users with a more secure way to obfuscate the compressed chunk sizes, without incurring excessive overhead.
+  llm_prompt: "Repository: borgbackup/borg\n\n\n--- Context: Existing Open Issues\
+    \ ---\nIssue 1 (Number: 8650):\n  Title: Find out what files/folders are taking\
+    \ up space in backups\n  Body (Preview):\nI use borg to back up my laptop to a\
+    \ remote server over SSH. This works great, I've been using this for 4 years now\
+    \ and I'm still happy.\n\nOne issue I do have, is that the size of the backups\
+    \ on the remote server is getting bigger than I expect. I've been careful with\
+    \ the --exclude, but I still suspect that there might be some files/directories\
+    \ that are back upped that don't need to be (for example, big files like Linux\
+    \ ISO's, or some caches, ...). I would like to see what directories take up how...\n\
+    ----------\nIssue 2 (Number: 8710):\n  Title: Print `borg create --list --dry-run`\
+    \ to STDOUT to allow combination with `--paths-from-stdin`\n  Body (Preview):\n\
+    Currently, borg seems to list files to STDERR, which prevents its use in UNIX\
+    \ pipes. Of course, I could redirect `2>&1` but it would also include error messages\
+    \ and password prompts. The primary purpose of `borg create --list --dry-run ...`\
+    \  is to list files, so one could argue that therefore this should go to STDOUT\
+    \ and not STDERR. Also, this allows to use the borg pattern matching, then processing\
+    \ these somehow and finally pipe them back to `borg create ... --paths-from-stdin`.\
+    \ \n\nMy use-case i...\n----------\nIssue 3 (Number: 8637):\n  Title: Prune: Keep\
+    \ x per day / week / month, no matter how many in total\n  Body (Preview):\n##\
+    \ Have you checked borgbackup docs, FAQ, and open GitHub issues?\n\nYes\n\n##\
+    \ Is this a BUG / ISSUE report or a QUESTION?\n\nISSUE\n\n## System information.\
+    \ For client/server mode post info for both machines.\n\n#### Your borg version\
+    \ (borg -V)\n\nborg 1.2.8\n\n#### Operating system (distribution) and version\n\
+    \nLinux Mint 20\n\n#### How much data is handled by borg?\n\n389G\n\n## Describe\
+    \ the problem you're observing.\n\nMy drive is now full, and I need to remove\
+    \ (prune) old backups.\n\nHowever, I do not want to only k...\n----------\nIssue\
+    \ 4 (Number: 8671):\n  Title: Support SOCKS5 proxy\n  Body (Preview):\nHello,\
+    \ thanks for creating borg. It's super useful.\n\nIt would be helpful if borg\
+    \ supports SOCKS5 proxying. Currently the network I'm in won't allow me to SSH\
+    \ into my backup box, but if I was able to use a SOCKS5 proxy it would work. Thanks!\n\
+    ----------\nIssue 5 (Number: 8702):\n  Title: vagrant: openindiana box broken\n\
+    \  Body: [Omitted due to length (3231 > 2000 chars)]\n----------\n(1 issue bodies\
+    \ omitted due to length limit of 2000 chars.)\n\n--- Pull Request #8714 Details\
+    \ ---\nPR Title: implement padme chunk size obfuscation (SPEC 250), fixes #8705\n\
+    \nPR Body:\nAdded Padmé padding as a new obfuscation option with SPEC=250. \n\
+    Implemented in compress.pyx, \ntested in compress_test.py.\nadded documentation\
+    \ in help_cmd.py\n\ncloses issue #8705 \n\n\n--- Review Comments ---\n\nnitpick:\
+    \ move it to above \"random\", so the stdlib imports are sorted.\n\nmaybe spread\
+    \ the params a little more: 0, 10, 100, 1000, .., MAX_DATA_SIZE.\n\nyou could\
+    \ also give (data_length, expected_padding) tuples instead of duplicating the\
+    \ padme implementation code to here.\n\nhaving this in a separate commit with\
+    \ a good commit comment would be preferred, considering it has nothing to do with\
+    \ padme padding.\n\nI am getting a negative value error when i go upto max data\
+    \ size so ill stop a little below that\n\nshould i push it to this branch itself\
+    \ or a different one?\n\nyou can leave it in this PR if you like or move it to\
+    \ a separate PR.\n\nimportant is that we have 2 commits in the end, one for padme,\
+    \ one for fixing the xattr.\n\none minute ill just add a new commit for xattr\n\
+    \nI have added the commit\n\ncan you give a better commit comment?\n\nlike e.g.\
+    \ \"tests: ignore 'com.apple.provenance' xattr (macOS specific)\"\n\n^^^^\n\n\
+    done\n\nguess that 2nd check in 614+ can be merged into the 1st check in 609+.\n\
+    \nkeep the stdlib imports sorted please and also keep the empty line between stdlib\
+    \ imports and other imports.\n\ni think the value of E will depend on the value\
+    \ of compr_size so i think it should work only after that\n\nguess black or pep8\
+    \ will fail this formatting.\n\ndid you install the black pre-commit hook as described\
+    \ in the developer docs?\n\nprecisely because it depends you can do that merge.\
+    \ just don't use E, but compr_size.\n\nehrm, guess you do not need the math import\
+    \ in the test module anymore.\n\ni did now sorry I think i missed that part\n\n\
+    yeah i fixed that\n\nstuff below is also stdlib, so don't insert an empty line.\n\
+    \npytest is not stdlib, but a (popular) 3rd party package.\n\nso i should leave\
+    \ a gap after zlib right? before the try block\n\nyes. in general avoid changes\
+    \ if there is no good reason for them.\n\ncan you please stop changing the order\
+    \ of imports for no reason? the original import order was stdlib grouped together\
+    \ in alphabetical order.\n\nGuess you still need to merge the 2nd test you had\
+    \ (E == 0) using compr_size into the test in 607.\n\nadd a test for data_length\
+    \ 1 please.\n\nAh Okay sorry its just that sometimes in PEP 8 the module length\
+    \ also takes precedence but ill change it back!\nSorry !\n\ndone\n\nyeah i did\
+    \ that now\n\nplease simplify the expression.\n\nyeah i made compr_size<2 so it\
+    \ automatically makes log2 <1\n\n\n--- Issue Comments ---\n\nI have added a new\
+    \ commit\n\nAhh Sorry its my first time contributing so i might be making some\
+    \ mistakes ! Thanks for the support\n\n## [Codecov](https://app.codecov.io/gh/borgbackup/borg/pull/8714?dropdown=coverage&src=pr&el=h1&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=borgbackup)\
+    \ Report\nAll modified and coverable lines are covered by tests :white_check_mark:\n\
+    > Project coverage is 81.82%. Comparing base [(`d8a0601`)](https://app.codecov.io/gh/borgbackup/borg/commit/d8a0601b7c9091247cc7103f5c2b2ecd8229abe4?dropdown=coverage&el=desc&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=borgbackup)\
+    \ to head [(`34d4e2a`)](https://app.codecov.io/gh/borgbackup/borg/commit/34d4e2a2ddf9c0559a3e855bff27fa03cf7cc781?dropdown=coverage&el=desc&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=borgbackup).\n\
+    > Report is 12 commits behind head on master.\n\n<details><summary>Additional\
+    \ details and impacted files</summary>\n\n\n```diff\n@@           Coverage Diff\
+    \           @@\n##           master    #8714   +/-   ##\n=======================================\n\
+    \  Coverage   81.81%   81.82%           \n=======================================\n\
+    \  Files          74       74           \n  Lines       13348    13348       \
+    \    \n  Branches     1971     1971           \n=======================================\n\
+    + Hits        10921    10922    +1     \n  Misses       1761     1761        \
+    \   \n+ Partials      666      665    -1     \n```\n\n</details>\n\n[:umbrella:\
+    \ View full report in Codecov by Sentry](https://app.codecov.io/gh/borgbackup/borg/pull/8714?dropdown=coverage&src=pr&el=continue&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=borgbackup).\
+    \   \n:loudspeaker: Have feedback on the report? [Share it here](https://about.codecov.io/codecov-pr-comment-feedback/?utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=borgbackup).\n\
+    \n<details><summary> :rocket: New features to boost your workflow: </summary>\n\
+    \n- :snowflake: [Test Analytics](https://docs.codecov.com/docs/test-analytics):\
+    \ Detect flaky tests, report on failures, and find test suite problems.\n</details>\n\
+    \nThe one test that failed was due to a formatting error (an extra gap was needed)\
+    \ which i fixed with black but i shouldnt commit it right since it would be a\
+    \ very small change? or should i?\n\nYou should commit all needed so that the\
+    \ tests pass.\n\nAfter we're finished with reviewing/changing, it would be good\
+    \ to collapse all into 2 commits, as I described above (e.g. via `git rebase -i\
+    \ master` - be careful).\n\nI think my latest commit should fix the test that\
+    \ failed. I checked all the files with  black and also it passed all the pre-commit\
+    \ tests\n\nIs everything okay now?\n\n2 things are missing still:\n- an update\
+    \ to the docs (including a link to the padme description, see ticket), e.g. \"\
+    borg help compression\"\n- collapsing the commits by topic, 1 for padme, 1 for\
+    \ xattr\n\nthe commit comment for the padme commit should be something like \"\
+    implement padme chunk size obfuscation (SPEC 250), fixes #8705\"\n\nOkay will\
+    \ do those!\n\ni am supposed to make changes in docs/usage/help.rst.inc ?\n\n\
+    No, see the 1st line of that file.\n\nJust locate some closeby already existing\
+    \ text in the python code and add the new SPEC description there.\n\ncan you clarify\
+    \ what this means ?  I’ve reviewed src/borg/archiver/create_cmd.py (where --compression\
+    \ is defined) but coudnt understand how to proceed further\n\nyou could use grep\
+    \ or some fulltext search function to locate the text you see in \"borg help compression\"\
+    .\n\ngrep -r \"obfuscate,SPEC,C\" src/  - using this i found the file with the\
+    \ appropriate text and updated the docs\n\nonce you approve this ill collapse\
+    \ the commits\n\nHey so one problem while doing rebase i think i messed up a bit,\
+    \ becasue there was one commit before the apple.com.provenance that was relevant\
+    \ to padme obfuscation so while reordering the commits it got merged into one\
+    \ i think or something\nits my first time doing this so it doesnt look recoverable\n\
+    \nis it possible for you to squash before merging the PR?\n\nI could only squash\
+    \ everything together, which is not wanted in this case.\n\nSo this needs to be\
+    \ solved locally using git.\n\nIf you messed up your local repo, you maybe can\
+    \ still clone a good repo from your github (as long as that isn't messed up also).\n\
+    \nOkay so I can do one thing , I'll make one more commit where I'll remove the\
+    \ apple.com.provenance and then squash and then I'll make a commit for apple.com.provenance?\n\
+    \nHow about just removing the xattr stuff from this PR completely and open a separate\
+    \ PR for that?\n\nOkay will do that! But it's there in its description of this\
+    \ PR , can that be changed?\n\nClick on the 3 dots to edit your comments here.\n\
+    \ni am seeing some other commits too?\n\nAlso i think you can squash everything\
+    \ together, i have removed the com.provenance part\n\nThe commits don't look correct,\
+    \ there are unrelated other people's commits in here now.\n\nYeah that's what\
+    \ I have no idea how that happened\n\nI did not even change these files nor made\
+    \ any of these commits\n\nMaybe you did the rebase wrong? Try `git rebase -i master`\
+    \ (and make sure your master branch is uptodate).\n\nI think it is upto date!\
+    \ ill do it tonight thanks!\n\n\n--- Commit Messages ---\n\nAdd Padmé padding\
+    \ as obfuscate,SPEC=250\n\nModified test function and added condition to prevent\
+    \ math domain error in padme_obfuscate function\n\nFixed the extended attributes\
+    \ error com.apple.provenance\n\ntests: ignore 'com.apple.provenance' xattr (macOS\
+    \ specific)\n\nFixed formattting issues using pre-commit-install\n\nFixed formattting\
+    \ issues using pre-commit-install\n\nMerged conditions in padme obfuscate function\n\
+    \nFixed Formatting issues and corrected import order\n\nCorrected import order\
+    \ and merged redundant check in _padme_obfuscate\n\nsimplified the condition expression\
+    \ in _padme_obfuscate\n\nAdded documentation for _padme_obfuscation\n\nupdate\
+    \ CHANGES\n\nClearer language\n\nupdate development.lock.txt\n\nuse python 3.12.8\n\
+    \nthis includes/bundles a non-broken pip for old macOS. #8495\n\nvagrant: use\
+    \ pyinstaller 6.11.1\n\nmsys2: use pyinstaller 6.11.1\n\nvagrant: build binaries\
+    \ with borgstore[sftp], fixes #8574\n\nAdd Padmé padding as obfuscate,SPEC=250\n\
+    \nremoved com.apple.provenance for a seperate PR\n\nremoved com.apple.provenance\
+    \ for a seperate PR\n\n\n--- Diff ---\n\ndiff --git a/src/borg/archiver/help_cmd.py\
+    \ b/src/borg/archiver/help_cmd.py\nindex b9f9e15214..40ce591125 100644\n--- a/src/borg/archiver/help_cmd.py\n\
+    +++ b/src/borg/archiver/help_cmd.py\n@@ -470,6 +470,15 @@ class HelpMixIn:\n \
+    \              ...\n               123: 8MiB (max.)\n \n+            *Padmé padding*\
+    \ (deterministic)\n+\n+            ::\n+\n+              250: pads to sums of\
+    \ powers of 2, max 12% overhead\n+\n+            Uses the Padmé algorithm to deterministically\
+    \ pad the compressed size to a sum of\n+            powers of 2, limiting overhead\
+    \ to 12%. See https://lbarman.ch/blog/padme/ for details.\n+\n         Examples::\n\
+    \ \n             borg create --compression lz4 REPO::ARCHIVE data\n@@ -481,7 +490,8\
+    \ @@ class HelpMixIn:\n             borg create --compression auto,lzma ...\n\
+    \             borg create --compression obfuscate,110,none ...\n             borg\
+    \ create --compression obfuscate,3,auto,zstd,10 ...\n-            borg create\
+    \ --compression obfuscate,2,zstd,6 ...\n\n\"\"\"\n+            borg create --compression\
+    \ obfuscate,2,zstd,6 ...\n+            borg create --compression obfuscate,250,zstd,3\
+    \ ...\n\n\"\"\"\n     )\n \n     def do_help(self, parser, commands, args):\n\
+    diff --git a/src/borg/compress.pyx b/src/borg/compress.pyx\nindex 46013274a6..404a6ac4b0\
+    \ 100644\n--- a/src/borg/compress.pyx\n+++ b/src/borg/compress.pyx\n@@ -16,16\
+    \ +16,18 @@ decompressor.\n \"\"\"\n \n from argparse import ArgumentTypeError\n\
+    +import math\n import random\n from struct import Struct\n import zlib\n \n+import\
+    \ math\n+\n try:\n     import lzma\n except ImportError:\n     lzma = None\n \n\
+    -\n from .constants import MAX_DATA_SIZE\n from .helpers import Buffer, DecompressionError\n\
+    \ \n@@ -556,6 +558,8 @@ class ObfuscateSize(CompressorBase):\n         elif 110\
+    \ <= level <= 123:\n             self._obfuscate = self._random_padding_obfuscate\n\
+    \             self.max_padding_size = 2 ** (level - 100)  # 1kiB .. 8MiB\n+  \
+    \      elif level == 250:  # Padmé\n+            self._obfuscate = self._padme_obfuscate\n\
+    \ \n     def _obfuscate(self, compr_size):\n         # implementations need to\
+    \ return the size of obfuscation data,\n@@ -600,6 +604,24 @@ class ObfuscateSize(CompressorBase):\n\
+    \             self.compressor = compressor_cls()\n         return self.compressor.decompress(meta,\
+    \ compressed_data)  # decompress data\n \n+    \n+    def _padme_obfuscate(self,\
+    \ compr_size):\n+        if compr_size < 2:\n+            return 0\n+\n+     \
+    \   E = math.floor(math.log2(compr_size))  # Get exponent (power of 2)\n+    \
+    \     \n+        S = math.floor(math.log2(E)) + 1\n+        lastBits = E - S\n\
+    +        bitMask = (2 ** lastBits - 1)\n+\n+        padded_size = (compr_size\
+    \ + bitMask) & ~bitMask  # Apply rounding\n+\n+        # Ensure max 12% overhead\n\
+    +        max_allowed = int(compr_size * 1.12)\n+        final_size = min(padded_size,\
+    \ max_allowed)\n+\n+        return final_size - compr_size # return padding value\n\
+    \ \n # Maps valid compressor names to their class\n COMPRESSOR_TABLE = {\ndiff\
+    \ --git a/src/borg/testsuite/compress_test.py b/src/borg/testsuite/compress_test.py\n\
+    index c294b5ff89..70bc1cec3f 100644\n--- a/src/borg/testsuite/compress_test.py\n\
+    +++ b/src/borg/testsuite/compress_test.py\n@@ -210,3 +210,33 @@ def test_specified_compression_level(c_type,\
+    \ c_name, c_levels):\n def test_invalid_compression_level(invalid_spec):\n   \
+    \  with pytest.raises(argparse.ArgumentTypeError):\n         CompressionSpec(invalid_spec)\n\
+    +\n+\n+@pytest.mark.parametrize(\n+    \"data_length, expected_padding\",\n+ \
+    \   [\n+        (0, 0),\n+        (1, 0),\n+        (10, 0),\n+        (100, 4),\n\
+    +        (1000, 24),\n+        (10000, 240),\n+        (20000, 480),\n+      \
+    \  (50000, 1200),\n+        (100000, 352),\n+        (1000000, 15808),\n+    \
+    \    (5000000, 111808),\n+        (10000000, 223616),\n+        (20000000, 447232),\n\
+    +    ],\n+)\n+def test_padme_obfuscation(data_length, expected_padding):\n+  \
+    \  compressor = Compressor(name=\"obfuscate\", level=250, compressor=Compressor(\"\
+    none\"))\n+    data = b\"x\" * data_length\n+    meta, compressed = compressor.compress({},\
+    \ data)\n+\n+    expected_padded_size = data_length + expected_padding\n+\n+ \
+    \   assert (\n+        len(compressed) == expected_padded_size\n+    ), f\"For\
+    \ {data_length}, expected {expected_padded_size}, got {len(compressed)}\"\n\n\n\
+    --- Task ---\nBased on the PR details and the context from existing issues provided\
+    \ above, please generate the text (title and body) for a new, plausible GitHub\
+    \ issue that the pull request #8714 appears to resolve. Output only the issue\
+    \ title and body in markdown format.\n"
+  diff: "diff --git a/src/borg/archiver/help_cmd.py b/src/borg/archiver/help_cmd.py\n\
+    index b9f9e15214..40ce591125 100644\n--- a/src/borg/archiver/help_cmd.py\n+++\
+    \ b/src/borg/archiver/help_cmd.py\n@@ -470,6 +470,15 @@ class HelpMixIn:\n   \
+    \            ...\n               123: 8MiB (max.)\n \n+            *Padmé padding*\
+    \ (deterministic)\n+\n+            ::\n+\n+              250: pads to sums of\
+    \ powers of 2, max 12% overhead\n+\n+            Uses the Padmé algorithm to deterministically\
+    \ pad the compressed size to a sum of\n+            powers of 2, limiting overhead\
+    \ to 12%. See https://lbarman.ch/blog/padme/ for details.\n+\n         Examples::\n\
+    \ \n             borg create --compression lz4 REPO::ARCHIVE data\n@@ -481,7 +490,8\
+    \ @@ class HelpMixIn:\n             borg create --compression auto,lzma ...\n\
+    \             borg create --compression obfuscate,110,none ...\n             borg\
+    \ create --compression obfuscate,3,auto,zstd,10 ...\n-            borg create\
+    \ --compression obfuscate,2,zstd,6 ...\n\n\"\"\"\n+            borg create --compression\
+    \ obfuscate,2,zstd,6 ...\n+            borg create --compression obfuscate,250,zstd,3\
+    \ ...\n\n\"\"\"\n     )\n \n     def do_help(self, parser, commands, args):\n\
+    diff --git a/src/borg/compress.pyx b/src/borg/compress.pyx\nindex 46013274a6..404a6ac4b0\
+    \ 100644\n--- a/src/borg/compress.pyx\n+++ b/src/borg/compress.pyx\n@@ -16,16\
+    \ +16,18 @@ decompressor.\n \"\"\"\n \n from argparse import ArgumentTypeError\n\
+    +import math\n import random\n from struct import Struct\n import zlib\n \n+import\
+    \ math\n+\n try:\n     import lzma\n except ImportError:\n     lzma = None\n \n\
+    -\n from .constants import MAX_DATA_SIZE\n from .helpers import Buffer, DecompressionError\n\
+    \ \n@@ -556,6 +558,8 @@ class ObfuscateSize(CompressorBase):\n         elif 110\
+    \ <= level <= 123:\n             self._obfuscate = self._random_padding_obfuscate\n\
+    \             self.max_padding_size = 2 ** (level - 100)  # 1kiB .. 8MiB\n+  \
+    \      elif level == 250:  # Padmé\n+            self._obfuscate = self._padme_obfuscate\n\
+    \ \n     def _obfuscate(self, compr_size):\n         # implementations need to\
+    \ return the size of obfuscation data,\n@@ -600,6 +604,24 @@ class ObfuscateSize(CompressorBase):\n\
+    \             self.compressor = compressor_cls()\n         return self.compressor.decompress(meta,\
+    \ compressed_data)  # decompress data\n \n+    \n+    def _padme_obfuscate(self,\
+    \ compr_size):\n+        if compr_size < 2:\n+            return 0\n+\n+     \
+    \   E = math.floor(math.log2(compr_size))  # Get exponent (power of 2)\n+    \
+    \     \n+        S = math.floor(math.log2(E)) + 1\n+        lastBits = E - S\n\
+    +        bitMask = (2 ** lastBits - 1)\n+\n+        padded_size = (compr_size\
+    \ + bitMask) & ~bitMask  # Apply rounding\n+\n+        # Ensure max 12% overhead\n\
+    +        max_allowed = int(compr_size * 1.12)\n+        final_size = min(padded_size,\
+    \ max_allowed)\n+\n+        return final_size - compr_size # return padding value\n\
+    \ \n # Maps valid compressor names to their class\n COMPRESSOR_TABLE = {\ndiff\
+    \ --git a/src/borg/testsuite/compress_test.py b/src/borg/testsuite/compress_test.py\n\
+    index c294b5ff89..70bc1cec3f 100644\n--- a/src/borg/testsuite/compress_test.py\n\
+    +++ b/src/borg/testsuite/compress_test.py\n@@ -210,3 +210,33 @@ def test_specified_compression_level(c_type,\
+    \ c_name, c_levels):\n def test_invalid_compression_level(invalid_spec):\n   \
+    \  with pytest.raises(argparse.ArgumentTypeError):\n         CompressionSpec(invalid_spec)\n\
+    +\n+\n+@pytest.mark.parametrize(\n+    \"data_length, expected_padding\",\n+ \
+    \   [\n+        (0, 0),\n+        (1, 0),\n+        (10, 0),\n+        (100, 4),\n\
+    +        (1000, 24),\n+        (10000, 240),\n+        (20000, 480),\n+      \
+    \  (50000, 1200),\n+        (100000, 352),\n+        (1000000, 15808),\n+    \
+    \    (5000000, 111808),\n+        (10000000, 223616),\n+        (20000000, 447232),\n\
+    +    ],\n+)\n+def test_padme_obfuscation(data_length, expected_padding):\n+  \
+    \  compressor = Compressor(name=\"obfuscate\", level=250, compressor=Compressor(\"\
+    none\"))\n+    data = b\"x\" * data_length\n+    meta, compressed = compressor.compress({},\
+    \ data)\n+\n+    expected_padded_size = data_length + expected_padding\n+\n+ \
+    \   assert (\n+        len(compressed) == expected_padded_size\n+    ), f\"For\
+    \ {data_length}, expected {expected_padded_size}, got {len(compressed)}\"\n"
+- repository: boto/boto3
+  pr:
+    number: 4486
+    title: Upgrade Sphinx and Furo dependencies
+    url: https://github.com/boto/boto3/pull/4486
+  status: success
+  synthesized_issue: |-
+    # Documentation Styling Issues
+
+    The styling and layout of the documentation has some issues that need to be addressed:
+
+    1. **Misaligned Theme and Menu Toggles**: The theme toggle button and the menu toggle button are not properly aligned, especially on smaller viewports. This results in an unpolished and inconsistent look.
+
+    2. **Spacing Issues**: There are spacing and alignment problems with certain elements on the documentation pages, such as the theme toggle and menu toggle buttons appearing too close together on smaller screens.
+
+    3. **Accessibility Concerns**: The documentation lacks proper accessibility features, making it difficult for users with disabilities to navigate and interact with the content effectively.
+
+    4. **Outdated Dependencies**: The documentation is using outdated versions of Sphinx and Furo, which may lead to compatibility issues, security vulnerabilities, or missing out on new features and improvements in these dependencies.
+
+    5. **Styling Inconsistencies**: There are instances where the styling of certain elements does not match the overall theme or design, leading to an inconsistent visual experience for users.
+
+    These issues can negatively impact the user experience, accessibility, and maintainability of the documentation. Updating the dependencies and addressing the styling and layout problems would greatly improve the overall quality and usability of the documentation.
+  llm_prompt: "Repository: boto/boto3\n\n\n--- Context: Existing Open Issues ---\n\
+    Issue 1 (Number: 4481):\n  Title: DEFAULT_CHECKSUM_ALGORITHM error\n  Body (Preview):\n\
+    ### Describe the bug\n\nHi everyone, \n\nI'm running into an error \"DEFAULT_CHECKSUM_ALGORITHM\"\
+    \ when trying to use jupyter notebooks on top of Sagemaker Unified Studio Jupyter\
+    \ Lab;\n\nI've searched a little and saw that it could be a problem with older\
+    \ boto3 versions but I'm running a new one:\n\nOutput of !aws --version:\naws-cli/1.38.14\
+    \ Python/3.11.11 Linux/5.10.234-225.910.amzn2.x86_64 botocore/1.37.14\n\n### Regression\
+    \ Issue\n\n- [ ] Select this option if this issue appears to be a regression.\n\
+    \n### Expec...\n----------\nIssue 2 (Number: 4453):\n  Title: Issue with Lake\
+    \ Formation permissions - Users can see referenced tables when granted access\
+    \ to views\n  Body: [Omitted due to length (2404 > 2000 chars)]\n----------\n\
+    Issue 3 (Number: 4419):\n  Title: Updated closed-issue-message + stale-issue-cleanup\
+    \ version\n  Body (Preview):\nA new release for the closed-issue-message action\
+    \ has been made. The workflow now uses v2 which should fix the action failing.\n\
+    ----------\nIssue 4 (Number: 4470):\n  Title: Feature Request: Helper functions\
+    \ for boto3 efficiency\n  Body (Preview):\n### Describe the feature\n\nHello,\n\
+    \nI would like to know why there are no helper functions in boto3. I understand\
+    \ that this library aims to provide a 1-to-1 mapping of the AWS API, but I believe\
+    \ it would be beneficial to include some helper functions to facilitate more efficient\
+    \ API calls.\n\nFor instance, the `elasticsearch-py` SDK includes helper functions\
+    \ like `streaming_bulk`, which optimize requests by maximizing the number of records\
+    \ sent or ensuring the maximum size is reached. Currently, I u...\n----------\n\
+    Issue 5 (Number: 4476):\n  Title: Inconsistent After Completing Multipart Upload\n\
+    \  Body (Preview):\n### Describe the bug\n\ninconsistent object availability after\
+    \ completing multipart upload with previously abandoned uploadId\n\n### Regression\
+    \ Issue\n\n- [ ] Select this option if this issue appears to be a regression.\n\
+    \n### Expected Behavior\n\nAfter step 4, complete_multipart_upload for uploadId2\
+    \ should succeed, and get_object (step 5) should return the object data uploaded\
+    \ via uploadId2.\n\n### Current Behavior\n\n`complete_multipart_upload` for uploadId2\
+    \ succeeds (HTTP 200), but get_object returns NoSuc...\n----------\n(1 issue bodies\
+    \ omitted due to length limit of 2000 chars.)\n\n--- Pull Request #4486 Details\
+    \ ---\nPR Title: Upgrade Sphinx and Furo dependencies\n\nPR Body:\nDescription\n\
+    \nThis PR upgrades Sphinx and Furo dependencies used for documentation generation.\n\
+    \nChanges:\n- Upgrades Sphinx to 7.1.2 for Python 3.8 and 7.4.7 for Python 3.9\
+    \ and above\n- Upgrades Furo to version 2024.08.06\n- Updates `page.html` template\
+    \ to address changes from Furo version bump\n- Adds CSS to fix alignment and spacing\
+    \ of theme and menu toggles\n- Adds `skip-to-content` accessibility feature\n\n\
+    \n--- Commit Messages ---\n\nUpgrade Sphinx and Furo\n\nUpdate Furo template and\
+    \ CSS\n\nAlign templates with Furo\n\n\n--- Diff ---\n\ndiff --git a/docs/source/_static/css/custom.css\
+    \ b/docs/source/_static/css/custom.css\nindex 537e5e243e..e6d1fcab7e 100644\n\
+    --- a/docs/source/_static/css/custom.css\n+++ b/docs/source/_static/css/custom.css\n\
+    @@ -62,6 +62,14 @@ li {\n     justify-content: center;\n     cursor: pointer;\n\
+    \ }\n+/* Aligns theme toggle and menu toggle on a medium viewport */\n+.content-icon-container\
+    \ {\n+    align-items: center;\n+}\n+/* Adds gap between theme toggle and menu\
+    \ toggle on a small viewport */\n+.header-right {\n+    gap: 0.5rem;\n+}\n /*\
+    \ Safeguard for ensuring menus are always visible on larger screens. */\n @media\
+    \ (min-width: 82em) {\n     .hide-sidebar {\n@@ -110,3 +118,7 @@ h3.admonition-title::before\
+    \ {\n .hidden {\n     display: none;\n }\n+/* Replaces in-line styling in icons.html\
+    \ */\n+.icon-opacity{\n+    opacity: 50%;\n+}\ndiff --git a/docs/source/_templates/page.html\
+    \ b/docs/source/_templates/page.html\nindex f26954f9de..a6caba0508 100644\n---\
+    \ a/docs/source/_templates/page.html\n+++ b/docs/source/_templates/page.html\n\
+    @@ -39,6 +39,12 @@\n   <div class=\"visually-hidden\">Hide table of contents sidebar</div>\n\
+    \ </label>\n \n+<a class=\"skip-to-content muted-link\" href=\"#furo-main-content\"\
+    >\n+  {%- trans -%}\n+  Skip to content\n+  {%- endtrans -%}\n+</a>\n+\n {% if\
+    \ theme_announcement -%}\n <div class=\"announcement\">\n   <aside class=\"announcement-content\"\
+    >\n@@ -62,7 +68,8 @@\n       <div class=\"theme-toggle-container theme-toggle-header\"\
+    >\n         <button class=\"theme-toggle\">\n           <div class=\"visually-hidden\"\
+    >Toggle Light / Dark / Auto color theme</div>\n-          <svg class=\"theme-icon-when-auto\"\
+    ><use href=\"#svg-sun-half\"></use></svg>\n+          <svg class=\"theme-icon-when-auto-light\"\
+    ><use href=\"#svg-sun-with-moon\"></use></svg>\n+          <svg class=\"theme-icon-when-auto-dark\"\
+    ><use href=\"#svg-moon-with-sun\"></use></svg>\n           <svg class=\"theme-icon-when-dark\"\
+    ><use href=\"#svg-moon\"></use></svg>\n           <svg class=\"theme-icon-when-light\"\
+    ><use href=\"#svg-sun\"></use></svg>\n         </button>\n@@ -94,16 +101,38 @@\n\
+    \           <span>{% trans %}Back to top{% endtrans %}</span>\n         </a>\n\
+    \         <div class=\"content-icon-container\">\n-          {% if theme_top_of_page_button\
+    \ == \"edit\" -%}\n-          {%- include \"components/edit-this-page.html\" with\
+    \ context -%}\n-          {%- elif theme_top_of_page_button != None -%}\n-   \
+    \       {{ warning(\"Got an unsupported value for 'top_of_page_button'\") }}\n\
+    +          {% if theme_top_of_page_button != \"edit\" -%}\n+            {{ warning(\"\
+    Got configuration for 'top_of_page_button': this is deprecated.\") }}\n+     \
+    \     {%- endif -%}\n+\n+          {%- if theme_top_of_page_buttons == \"\" -%}\n\
+    +            {% if theme_top_of_page_button == None -%}\n+              {#- We\
+    \ respect the old configuration of disabling all the buttons -#}\n+          \
+    \    {%- set theme_top_of_page_buttons = [] -%}\n+            {% else %}\n+  \
+    \            {%- set theme_top_of_page_buttons = [\"view\", \"edit\"] -%}\n+ \
+    \           {%- endif -%}\n+          {% else -%}\n+            {% if theme_top_of_page_button\
+    \ != \"edit\" -%}\n+              {%- set theme_top_of_page_buttons = [] -%}\n\
+    +              {{ warning(\"Got configuration for both 'top_of_page_button' and\
+    \ 'top_of_page_buttons', ignoring both and removing all top of page buttons.\"\
+    ) }}\n+            {%- endif -%}\n           {%- endif -%}\n+          {% for\
+    \ button in theme_top_of_page_buttons -%}\n+            {% if button == \"view\"\
+    \ %}\n+            {%- include \"components/view-this-page.html\" with context\
+    \ -%}\n+            {% elif button == \"edit\" %}\n+            {%- include \"\
+    components/edit-this-page.html\" with context -%}\n+            {% else %}\n+\
+    \            {{ warning(\"Got an unsupported value in 'top_of_page_buttons' for\
+    \ theme configuration\") }}\n+            {% endif %}\n+          {%- endfor -%}\n\
+    \           {#- Theme toggle -#}\n           <div class=\"theme-toggle-container\
+    \ theme-toggle-content\">\n             <button class=\"theme-toggle\">\n    \
+    \           <div class=\"visually-hidden\">Toggle Light / Dark / Auto color theme</div>\n\
+    -              <svg class=\"theme-icon-when-auto\"><use href=\"#svg-sun-half\"\
+    ></use></svg>\n+              <svg class=\"theme-icon-when-auto-light\"><use href=\"\
+    #svg-sun-with-moon\"></use></svg>\n+              <svg class=\"theme-icon-when-auto-dark\"\
+    ><use href=\"#svg-moon-with-sun\"></use></svg>\n               <svg class=\"theme-icon-when-dark\"\
+    ><use href=\"#svg-moon\"></use></svg>\n               <svg class=\"theme-icon-when-light\"\
+    ><use href=\"#svg-sun\"></use></svg>\n             </button>\n@@ -113,7 +142,7\
+    \ @@\n             <i class=\"icon\"><svg><use href=\"#svg-toc\"></use></svg></i>\n\
+    \           </label>\n         </div>\n-        <article role=\"main\">\n+   \
+    \     <article role=\"main\" id=\"furo-main-content\">\n           {% block content\
+    \ %}{{ body }}{% endblock %}\n         </article>\n       </div>\ndiff --git a/docs/source/_templates/partials/icons.html\
+    \ b/docs/source/_templates/partials/icons.html\nindex 8c3ef273de..c8af951528 100644\n\
+    --- a/docs/source/_templates/partials/icons.html\n+++ b/docs/source/_templates/partials/icons.html\n\
+    @@ -1,31 +1,16 @@\n {#This file is a modified version of \"icons.html\" file in\
+    \ furo version\n-2022.12.7. #} {# Adapted from Just the Docs #}\n+2024.08.06.\
+    \ #} {# Adapted from Just the Docs #}\n <svg xmlns=\"http://www.w3.org/2000/svg\"\
+    \ class=\"hidden\">\n   <symbol id=\"svg-toc\" viewBox=\"0 0 24 24\">\n     <title>Contents</title>\n\
+    -    <svg\n-      stroke=\"currentColor\"\n-      fill=\"currentColor\"\n-   \
+    \   stroke-width=\"0\"\n-      viewBox=\"0 0 1024 1024\"\n-    >\n-      <path\n\
+    -        d=\"M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8\
+    \ 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4\
+    \ 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6\
+    \ 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4\
+    \ 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4\
+    \ 505.1a8.74 8.74 0 0 0 0 13.8z\"\n-      />\n+    <svg stroke=\"currentColor\"\
+    \ fill=\"currentColor\" stroke-width=\"0\" viewBox=\"0 0 1024 1024\">\n+     \
+    \ <path d=\"M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8\
+    \ 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4\
+    \ 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6\
+    \ 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4\
+    \ 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4\
+    \ 505.1a8.74 8.74 0 0 0 0 13.8z\"/>\n     </svg>\n   </symbol>\n   <symbol id=\"\
+    svg-menu\" viewBox=\"0 0 24 24\">\n     <title>Menu</title>\n-    <svg\n-    \
+    \  xmlns=\"http://www.w3.org/2000/svg\"\n-      viewBox=\"0 0 24 24\"\n-     \
+    \ fill=\"none\"\n-      stroke=\"currentColor\"\n-      stroke-width=\"2\"\n-\
+    \      stroke-linecap=\"round\"\n-      stroke-linejoin=\"round\"\n-      class=\"\
+    feather-menu\"\n-    >\n+    <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"\
+    0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\n+      stroke-width=\"2\" stroke-linecap=\"\
+    round\" stroke-linejoin=\"round\" class=\"feather-menu\">\n       <line x1=\"\
+    3\" y1=\"12\" x2=\"21\" y2=\"12\"></line>\n       <line x1=\"3\" y1=\"6\" x2=\"\
+    21\" y2=\"6\"></line>\n       <line x1=\"3\" y1=\"18\" x2=\"21\" y2=\"18\"></line>\n\
+    @@ -33,31 +18,15 @@\n   </symbol>\n   <symbol id=\"svg-arrow-right\" viewBox=\"\
+    0 0 24 24\">\n     <title>Expand</title>\n-    <svg\n-      xmlns=\"http://www.w3.org/2000/svg\"\
+    \n-      viewBox=\"0 0 24 24\"\n-      fill=\"none\"\n-      stroke=\"currentColor\"\
+    \n-      stroke-width=\"2\"\n-      stroke-linecap=\"round\"\n-      stroke-linejoin=\"\
+    round\"\n-      class=\"feather-chevron-right\"\n-    >\n+    <svg xmlns=\"http://www.w3.org/2000/svg\"\
+    \ viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\n+      stroke-width=\"\
+    2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"feather-chevron-right\"\
+    >\n       <polyline points=\"9 18 15 12 9 6\"></polyline>\n     </svg>\n   </symbol>\n\
+    \   <symbol id=\"svg-sun\" viewBox=\"0 0 24 24\">\n     <title>Light mode</title>\n\
+    -    <svg\n-      xmlns=\"http://www.w3.org/2000/svg\"\n-      viewBox=\"0 0 24\
+    \ 24\"\n-      fill=\"none\"\n-      stroke=\"currentColor\"\n-      stroke-width=\"\
+    1.5\"\n-      stroke-linecap=\"round\"\n-      stroke-linejoin=\"round\"\n-  \
+    \    class=\"feather-sun\"\n-    >\n+    <svg xmlns=\"http://www.w3.org/2000/svg\"\
+    \ viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\n+      stroke-width=\"\
+    1\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"feather-sun\">\n\
+    \       <circle cx=\"12\" cy=\"12\" r=\"5\"></circle>\n       <line x1=\"12\"\
+    \ y1=\"1\" x2=\"12\" y2=\"3\"></line>\n       <line x1=\"12\" y1=\"21\" x2=\"\
+    12\" y2=\"23\"></line>\n@@ -71,41 +40,64 @@\n   </symbol>\n   <symbol id=\"svg-moon\"\
+    \ viewBox=\"0 0 24 24\">\n     <title>Dark mode</title>\n-    <svg\n-      xmlns=\"\
+    http://www.w3.org/2000/svg\"\n-      viewBox=\"0 0 24 24\"\n-      fill=\"none\"\
+    \n-      stroke=\"currentColor\"\n-      stroke-width=\"1.5\"\n-      stroke-linecap=\"\
+    round\"\n-      stroke-linejoin=\"round\"\n-      class=\"icon-tabler-moon\"\n\
+    -    >\n+    <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"\
+    none\" stroke=\"currentColor\"\n+      stroke-width=\"1\" stroke-linecap=\"round\"\
+    \ stroke-linejoin=\"round\" class=\"icon-tabler-moon\">\n       <path stroke=\"\
+    none\" d=\"M0 0h24v24H0z\" fill=\"none\" />\n-      <path\n-        d=\"M12 3c.132\
+    \ 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z\"\n-   \
+    \   />\n+      <path d=\"M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9\
+    \ 9 0 1 1 -8.313 -12.454z\" />\n     </svg>\n   </symbol>\n-  <symbol id=\"svg-sun-half\"\
+    \ viewBox=\"0 0 24 24\">\n-    <title>Auto light/dark mode</title>\n-    <svg\n\
+    -      xmlns=\"http://www.w3.org/2000/svg\"\n-      viewBox=\"0 0 24 24\"\n- \
+    \     fill=\"none\"\n-      stroke=\"currentColor\"\n-      stroke-width=\"1.5\"\
+    \n-      stroke-linecap=\"round\"\n-      stroke-linejoin=\"round\"\n-      class=\"\
+    icon-tabler-shadow\"\n-    >\n+  <symbol id=\"svg-sun-with-moon\" viewBox=\"0\
+    \ 0 24 24\">\n+    <title>Auto light/dark, in light mode</title>\n+    <svg xmlns=\"\
+    http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\
+    \n+      stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"\
+    \n+      class=\"icon-custom-derived-from-feather-sun-and-tabler-moon\">\n+  \
+    \    <path class=\"icon-opacity\" d=\"M 5.411 14.504 C 5.471 14.504 5.532 14.504\
+    \ 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551\
+    \ 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949\
+    \ 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z\"/>\n+  \
+    \    <line x1=\"14.5\" y1=\"3.25\" x2=\"14.5\" y2=\"1.25\"/>\n+      <line x1=\"\
+    14.5\" y1=\"15.85\" x2=\"14.5\" y2=\"17.85\"/>\n+      <line x1=\"10.044\" y1=\"\
+    5.094\" x2=\"8.63\" y2=\"3.68\"/>\n+      <line x1=\"19\" y1=\"14.05\" x2=\"20.414\"\
+    \ y2=\"15.464\"/>\n+      <line x1=\"8.2\" y1=\"9.55\" x2=\"6.2\" y2=\"9.55\"\
+    />\n+      <line x1=\"20.8\" y1=\"9.55\" x2=\"22.8\" y2=\"9.55\"/>\n+      <line\
+    \ x1=\"10.044\" y1=\"14.006\" x2=\"8.63\" y2=\"15.42\"/>\n+      <line x1=\"19\"\
+    \ y1=\"5.05\" x2=\"20.414\" y2=\"3.636\"/>\n+      <circle cx=\"14.5\" cy=\"9.55\"\
+    \ r=\"3.6\"/>\n+    </svg>\n+  </symbol>\n+  <symbol id=\"svg-moon-with-sun\"\
+    \ viewBox=\"0 0 24 24\">\n+    <title>Auto light/dark, in dark mode</title>\n\
+    +    <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"\
+    \ stroke=\"currentColor\"\n+      stroke-width=\"1\" stroke-linecap=\"round\"\
+    \ stroke-linejoin=\"round\"\n+      class=\"icon-custom-derived-from-feather-sun-and-tabler-moon\"\
+    >\n+      <path d=\"M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18\
+    \ 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851\
+    \ 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652\
+    \ 7.021 7.965 7 8.282 7 L 8.282 7.007 Z\"/>\n+      <line class=\"icon-opacity\"\
+    \ x1=\"18\" y1=\"3.705\" x2=\"18\" y2=\"2.5\"/>\n+      <line class=\"icon-opacity\"\
+    \ x1=\"18\" y1=\"11.295\" x2=\"18\" y2=\"12.5\"/>\n+      <line class=\"icon-opacity\"\
+    \ x1=\"15.316\" y1=\"4.816\" x2=\"14.464\" y2=\"3.964\"/>\n+      <line class=\"\
+    icon-opacity\" x1=\"20.711\" y1=\"10.212\" x2=\"21.563\" y2=\"11.063\"/>\n+  \
+    \    <line class=\"icon-opacity\" x1=\"14.205\" y1=\"7.5\" x2=\"13.001\" y2=\"\
+    7.5\"/>\n+      <line class=\"icon-opacity\" x1=\"21.795\" y1=\"7.5\" x2=\"23\"\
+    \ y2=\"7.5\"/>\n+      <line class=\"icon-opacity\" x1=\"15.316\" y1=\"10.184\"\
+    \ x2=\"14.464\" y2=\"11.036\"/>\n+      <line class=\"icon-opacity\" x1=\"20.711\"\
+    \ y1=\"4.789\" x2=\"21.563\" y2=\"3.937\"/>\n+      <circle class=\"icon-opacity\"\
+    \ cx=\"18\" cy=\"7.5\" r=\"2.169\"/>\n+    </svg>\n+  </symbol>\n+  <symbol id=\"\
+    svg-pencil\" viewBox=\"0 0 24 24\">\n+    <svg xmlns=\"http://www.w3.org/2000/svg\"\
+    \ viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\n+      stroke-width=\"\
+    1\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"icon-tabler-pencil-code\"\
+    >\n+      <path d=\"M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4\"\
+    \ />\n+      <path d=\"M13.5 6.5l4 4\" />\n+      <path d=\"M20 21l2 -2l-2 -2\"\
+    \ />\n+      <path d=\"M17 17l-2 2l2 2\" />\n+    </svg>\n+  </symbol>\n+  <symbol\
+    \ id=\"svg-eye\" viewBox=\"0 0 24 24\">\n+    <svg xmlns=\"http://www.w3.org/2000/svg\"\
+    \ viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\n+      stroke-width=\"\
+    1\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"icon-tabler-eye-code\"\
+    >\n       <path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\" />\n-      <circle\
+    \ cx=\"12\" cy=\"12\" r=\"9\" />\n-      <path d=\"M13 12h5\" />\n-      <path\
+    \ d=\"M13 15h4\" />\n-      <path d=\"M13 18h1\" />\n-      <path d=\"M13 9h4\"\
+    \ />\n-      <path d=\"M13 6h1\" />\n+      <path d=\"M10 12a2 2 0 1 0 4 0a2 2\
+    \ 0 0 0 -4 0\" />\n+      <path\n+        d=\"M11.11 17.958c-3.209 -.307 -5.91\
+    \ -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688\
+    \ -.647 1.008\" />\n+      <path d=\"M20 21l2 -2l-2 -2\" />\n+      <path d=\"\
+    M17 17l-2 2l2 2\" />\n     </svg>\n   </symbol>\n </svg>\ndiff --git a/requirements-docs-lock.txt\
+    \ b/requirements-docs-lock.txt\nindex 26ae627b4d..d31ffceda0 100644\n--- a/requirements-docs-lock.txt\n\
+    +++ b/requirements-docs-lock.txt\n@@ -116,9 +116,9 @@ docutils==0.19 \\\n    \
+    \ --hash=sha256:33995a6753c30b7f577febfc2c50411fec6aac7f7ffeb7c4cfe5991072dcf9e6\
+    \ \\\n     --hash=sha256:5e1de4d849fee02c63b040a4a3fd567f4ab104defd8a5511fbbc24a8a017efbc\n\
+    \     # via sphinx\n-furo==2022.12.7 \\\n-    --hash=sha256:7cb76c12a25ef65db85ab0743df907573d03027a33631f17d267e598ebb191f7\
+    \ \\\n-    --hash=sha256:d8008f8efbe7587a97ba533c8b2df1f9c21ee9b3e5cad0d27f61193d38b1a986\n\
+    +furo==2024.8.6 \\\n+    --hash=sha256:6cd97c58b47813d3619e63e9081169880fbe331f0ca883c871ff1f3f11814f5c\
+    \ \\\n+    --hash=sha256:b63e4cee8abfc3136d3bc03a3d45a76a850bada4d6374d24c1716b0e01394a01\n\
+    \     # via -r requirements-docs.txt\n idna==3.7 \\\n     --hash=sha256:028ff3aadf0609c1fd278d8ea3089299412a7a8b9bd005dd08b9f8285bcb5cfc\
+    \ \\\n@@ -224,9 +224,9 @@ soupsieve==2.5 \\\n     --hash=sha256:5663d5a7b3bfaeee0bc4372e7fc48f9cff4940b3eec54a6451cc5299f1097690\
+    \ \\\n     --hash=sha256:eaa337ff55a1579b6549dc679565eac1e3d000563bcb1c8ab0d0fefbc0c2cdc7\n\
+    \     # via beautifulsoup4\n-sphinx==5.3.0 \\\n-    --hash=sha256:060ca5c9f7ba57a08a1219e547b269fadf125ae25b06b9fa7f66768efb652d6d\
+    \ \\\n-    --hash=sha256:51026de0a9ff9fc13c05d74913ad66047e104f56a129ff73e174eb5c3ee794b5\n\
+    +sphinx==7.1.2 ; python_version < \"3.9\" \\\n+    --hash=sha256:780f4d32f1d7d1126576e0e5ecc19dc32ab76cd24e950228dcf7b1f6d3d9e22f\
+    \ \\\n+    --hash=sha256:d170a81825b2fcacb6dfd5a0d7f578a053e45d3f2b153fecc948c37344eb4cbe\n\
+    \     # via\n     #   -r requirements-docs.txt\n     #   furo\ndiff --git a/requirements-docs.txt\
+    \ b/requirements-docs.txt\nindex de99cd6ebd..a2d6ad2531 100644\n--- a/requirements-docs.txt\n\
+    +++ b/requirements-docs.txt\n@@ -1,5 +1,7 @@\n-sphinx==5.3.0\n-furo==2022.12.7\n\
+    +sphinx==7.4.7 ; python_version >= \"3.9\"\n+# Use sphinx 7.1.2 for Python 3.8\n\
+    +sphinx==7.1.2 ; python_version < \"3.9\"\n+furo==2024.08.06\n sphinx_copybutton==0.5.1\n\
+    \ sphinx-remove-toctrees==0.0.3\n # Avoid urllib3 2.x below Python 3.10\n\n\n\
+    --- Task ---\nBased on the PR details and the context from existing issues provided\
+    \ above, please generate the text (title and body) for a new, plausible GitHub\
+    \ issue that the pull request #4486 appears to resolve. Output only the issue\
+    \ title and body in markdown format.\n"
+  diff: "diff --git a/docs/source/_static/css/custom.css b/docs/source/_static/css/custom.css\n\
+    index 537e5e243e..e6d1fcab7e 100644\n--- a/docs/source/_static/css/custom.css\n\
+    +++ b/docs/source/_static/css/custom.css\n@@ -62,6 +62,14 @@ li {\n     justify-content:\
+    \ center;\n     cursor: pointer;\n }\n+/* Aligns theme toggle and menu toggle\
+    \ on a medium viewport */\n+.content-icon-container {\n+    align-items: center;\n\
+    +}\n+/* Adds gap between theme toggle and menu toggle on a small viewport */\n\
+    +.header-right {\n+    gap: 0.5rem;\n+}\n /* Safeguard for ensuring menus are\
+    \ always visible on larger screens. */\n @media (min-width: 82em) {\n     .hide-sidebar\
+    \ {\n@@ -110,3 +118,7 @@ h3.admonition-title::before {\n .hidden {\n     display:\
+    \ none;\n }\n+/* Replaces in-line styling in icons.html */\n+.icon-opacity{\n\
+    +    opacity: 50%;\n+}\ndiff --git a/docs/source/_templates/page.html b/docs/source/_templates/page.html\n\
+    index f26954f9de..a6caba0508 100644\n--- a/docs/source/_templates/page.html\n\
+    +++ b/docs/source/_templates/page.html\n@@ -39,6 +39,12 @@\n   <div class=\"visually-hidden\"\
+    >Hide table of contents sidebar</div>\n </label>\n \n+<a class=\"skip-to-content\
+    \ muted-link\" href=\"#furo-main-content\">\n+  {%- trans -%}\n+  Skip to content\n\
+    +  {%- endtrans -%}\n+</a>\n+\n {% if theme_announcement -%}\n <div class=\"announcement\"\
+    >\n   <aside class=\"announcement-content\">\n@@ -62,7 +68,8 @@\n       <div class=\"\
+    theme-toggle-container theme-toggle-header\">\n         <button class=\"theme-toggle\"\
+    >\n           <div class=\"visually-hidden\">Toggle Light / Dark / Auto color\
+    \ theme</div>\n-          <svg class=\"theme-icon-when-auto\"><use href=\"#svg-sun-half\"\
+    ></use></svg>\n+          <svg class=\"theme-icon-when-auto-light\"><use href=\"\
+    #svg-sun-with-moon\"></use></svg>\n+          <svg class=\"theme-icon-when-auto-dark\"\
+    ><use href=\"#svg-moon-with-sun\"></use></svg>\n           <svg class=\"theme-icon-when-dark\"\
+    ><use href=\"#svg-moon\"></use></svg>\n           <svg class=\"theme-icon-when-light\"\
+    ><use href=\"#svg-sun\"></use></svg>\n         </button>\n@@ -94,16 +101,38 @@\n\
+    \           <span>{% trans %}Back to top{% endtrans %}</span>\n         </a>\n\
+    \         <div class=\"content-icon-container\">\n-          {% if theme_top_of_page_button\
+    \ == \"edit\" -%}\n-          {%- include \"components/edit-this-page.html\" with\
+    \ context -%}\n-          {%- elif theme_top_of_page_button != None -%}\n-   \
+    \       {{ warning(\"Got an unsupported value for 'top_of_page_button'\") }}\n\
+    +          {% if theme_top_of_page_button != \"edit\" -%}\n+            {{ warning(\"\
+    Got configuration for 'top_of_page_button': this is deprecated.\") }}\n+     \
+    \     {%- endif -%}\n+\n+          {%- if theme_top_of_page_buttons == \"\" -%}\n\
+    +            {% if theme_top_of_page_button == None -%}\n+              {#- We\
+    \ respect the old configuration of disabling all the buttons -#}\n+          \
+    \    {%- set theme_top_of_page_buttons = [] -%}\n+            {% else %}\n+  \
+    \            {%- set theme_top_of_page_buttons = [\"view\", \"edit\"] -%}\n+ \
+    \           {%- endif -%}\n+          {% else -%}\n+            {% if theme_top_of_page_button\
+    \ != \"edit\" -%}\n+              {%- set theme_top_of_page_buttons = [] -%}\n\
+    +              {{ warning(\"Got configuration for both 'top_of_page_button' and\
+    \ 'top_of_page_buttons', ignoring both and removing all top of page buttons.\"\
+    ) }}\n+            {%- endif -%}\n           {%- endif -%}\n+          {% for\
+    \ button in theme_top_of_page_buttons -%}\n+            {% if button == \"view\"\
+    \ %}\n+            {%- include \"components/view-this-page.html\" with context\
+    \ -%}\n+            {% elif button == \"edit\" %}\n+            {%- include \"\
+    components/edit-this-page.html\" with context -%}\n+            {% else %}\n+\
+    \            {{ warning(\"Got an unsupported value in 'top_of_page_buttons' for\
+    \ theme configuration\") }}\n+            {% endif %}\n+          {%- endfor -%}\n\
+    \           {#- Theme toggle -#}\n           <div class=\"theme-toggle-container\
+    \ theme-toggle-content\">\n             <button class=\"theme-toggle\">\n    \
+    \           <div class=\"visually-hidden\">Toggle Light / Dark / Auto color theme</div>\n\
+    -              <svg class=\"theme-icon-when-auto\"><use href=\"#svg-sun-half\"\
+    ></use></svg>\n+              <svg class=\"theme-icon-when-auto-light\"><use href=\"\
+    #svg-sun-with-moon\"></use></svg>\n+              <svg class=\"theme-icon-when-auto-dark\"\
+    ><use href=\"#svg-moon-with-sun\"></use></svg>\n               <svg class=\"theme-icon-when-dark\"\
+    ><use href=\"#svg-moon\"></use></svg>\n               <svg class=\"theme-icon-when-light\"\
+    ><use href=\"#svg-sun\"></use></svg>\n             </button>\n@@ -113,7 +142,7\
+    \ @@\n             <i class=\"icon\"><svg><use href=\"#svg-toc\"></use></svg></i>\n\
+    \           </label>\n         </div>\n-        <article role=\"main\">\n+   \
+    \     <article role=\"main\" id=\"furo-main-content\">\n           {% block content\
+    \ %}{{ body }}{% endblock %}\n         </article>\n       </div>\ndiff --git a/docs/source/_templates/partials/icons.html\
+    \ b/docs/source/_templates/partials/icons.html\nindex 8c3ef273de..c8af951528 100644\n\
+    --- a/docs/source/_templates/partials/icons.html\n+++ b/docs/source/_templates/partials/icons.html\n\
+    @@ -1,31 +1,16 @@\n {#This file is a modified version of \"icons.html\" file in\
+    \ furo version\n-2022.12.7. #} {# Adapted from Just the Docs #}\n+2024.08.06.\
+    \ #} {# Adapted from Just the Docs #}\n <svg xmlns=\"http://www.w3.org/2000/svg\"\
+    \ class=\"hidden\">\n   <symbol id=\"svg-toc\" viewBox=\"0 0 24 24\">\n     <title>Contents</title>\n\
+    -    <svg\n-      stroke=\"currentColor\"\n-      fill=\"currentColor\"\n-   \
+    \   stroke-width=\"0\"\n-      viewBox=\"0 0 1024 1024\"\n-    >\n-      <path\n\
+    -        d=\"M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8\
+    \ 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4\
+    \ 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6\
+    \ 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4\
+    \ 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4\
+    \ 505.1a8.74 8.74 0 0 0 0 13.8z\"\n-      />\n+    <svg stroke=\"currentColor\"\
+    \ fill=\"currentColor\" stroke-width=\"0\" viewBox=\"0 0 1024 1024\">\n+     \
+    \ <path d=\"M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8\
+    \ 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4\
+    \ 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6\
+    \ 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4\
+    \ 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4\
+    \ 505.1a8.74 8.74 0 0 0 0 13.8z\"/>\n     </svg>\n   </symbol>\n   <symbol id=\"\
+    svg-menu\" viewBox=\"0 0 24 24\">\n     <title>Menu</title>\n-    <svg\n-    \
+    \  xmlns=\"http://www.w3.org/2000/svg\"\n-      viewBox=\"0 0 24 24\"\n-     \
+    \ fill=\"none\"\n-      stroke=\"currentColor\"\n-      stroke-width=\"2\"\n-\
+    \      stroke-linecap=\"round\"\n-      stroke-linejoin=\"round\"\n-      class=\"\
+    feather-menu\"\n-    >\n+    <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"\
+    0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\n+      stroke-width=\"2\" stroke-linecap=\"\
+    round\" stroke-linejoin=\"round\" class=\"feather-menu\">\n       <line x1=\"\
+    3\" y1=\"12\" x2=\"21\" y2=\"12\"></line>\n       <line x1=\"3\" y1=\"6\" x2=\"\
+    21\" y2=\"6\"></line>\n       <line x1=\"3\" y1=\"18\" x2=\"21\" y2=\"18\"></line>\n\
+    @@ -33,31 +18,15 @@\n   </symbol>\n   <symbol id=\"svg-arrow-right\" viewBox=\"\
+    0 0 24 24\">\n     <title>Expand</title>\n-    <svg\n-      xmlns=\"http://www.w3.org/2000/svg\"\
+    \n-      viewBox=\"0 0 24 24\"\n-      fill=\"none\"\n-      stroke=\"currentColor\"\
+    \n-      stroke-width=\"2\"\n-      stroke-linecap=\"round\"\n-      stroke-linejoin=\"\
+    round\"\n-      class=\"feather-chevron-right\"\n-    >\n+    <svg xmlns=\"http://www.w3.org/2000/svg\"\
+    \ viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\n+      stroke-width=\"\
+    2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"feather-chevron-right\"\
+    >\n       <polyline points=\"9 18 15 12 9 6\"></polyline>\n     </svg>\n   </symbol>\n\
+    \   <symbol id=\"svg-sun\" viewBox=\"0 0 24 24\">\n     <title>Light mode</title>\n\
+    -    <svg\n-      xmlns=\"http://www.w3.org/2000/svg\"\n-      viewBox=\"0 0 24\
+    \ 24\"\n-      fill=\"none\"\n-      stroke=\"currentColor\"\n-      stroke-width=\"\
+    1.5\"\n-      stroke-linecap=\"round\"\n-      stroke-linejoin=\"round\"\n-  \
+    \    class=\"feather-sun\"\n-    >\n+    <svg xmlns=\"http://www.w3.org/2000/svg\"\
+    \ viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\n+      stroke-width=\"\
+    1\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"feather-sun\">\n\
+    \       <circle cx=\"12\" cy=\"12\" r=\"5\"></circle>\n       <line x1=\"12\"\
+    \ y1=\"1\" x2=\"12\" y2=\"3\"></line>\n       <line x1=\"12\" y1=\"21\" x2=\"\
+    12\" y2=\"23\"></line>\n@@ -71,41 +40,64 @@\n   </symbol>\n   <symbol id=\"svg-moon\"\
+    \ viewBox=\"0 0 24 24\">\n     <title>Dark mode</title>\n-    <svg\n-      xmlns=\"\
+    http://www.w3.org/2000/svg\"\n-      viewBox=\"0 0 24 24\"\n-      fill=\"none\"\
+    \n-      stroke=\"currentColor\"\n-      stroke-width=\"1.5\"\n-      stroke-linecap=\"\
+    round\"\n-      stroke-linejoin=\"round\"\n-      class=\"icon-tabler-moon\"\n\
+    -    >\n+    <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"\
+    none\" stroke=\"currentColor\"\n+      stroke-width=\"1\" stroke-linecap=\"round\"\
+    \ stroke-linejoin=\"round\" class=\"icon-tabler-moon\">\n       <path stroke=\"\
+    none\" d=\"M0 0h24v24H0z\" fill=\"none\" />\n-      <path\n-        d=\"M12 3c.132\
+    \ 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z\"\n-   \
+    \   />\n+      <path d=\"M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9\
+    \ 9 0 1 1 -8.313 -12.454z\" />\n     </svg>\n   </symbol>\n-  <symbol id=\"svg-sun-half\"\
+    \ viewBox=\"0 0 24 24\">\n-    <title>Auto light/dark mode</title>\n-    <svg\n\
+    -      xmlns=\"http://www.w3.org/2000/svg\"\n-      viewBox=\"0 0 24 24\"\n- \
+    \     fill=\"none\"\n-      stroke=\"currentColor\"\n-      stroke-width=\"1.5\"\
+    \n-      stroke-linecap=\"round\"\n-      stroke-linejoin=\"round\"\n-      class=\"\
+    icon-tabler-shadow\"\n-    >\n+  <symbol id=\"svg-sun-with-moon\" viewBox=\"0\
+    \ 0 24 24\">\n+    <title>Auto light/dark, in light mode</title>\n+    <svg xmlns=\"\
+    http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\
+    \n+      stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"\
+    \n+      class=\"icon-custom-derived-from-feather-sun-and-tabler-moon\">\n+  \
+    \    <path class=\"icon-opacity\" d=\"M 5.411 14.504 C 5.471 14.504 5.532 14.504\
+    \ 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551\
+    \ 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949\
+    \ 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z\"/>\n+  \
+    \    <line x1=\"14.5\" y1=\"3.25\" x2=\"14.5\" y2=\"1.25\"/>\n+      <line x1=\"\
+    14.5\" y1=\"15.85\" x2=\"14.5\" y2=\"17.85\"/>\n+      <line x1=\"10.044\" y1=\"\
+    5.094\" x2=\"8.63\" y2=\"3.68\"/>\n+      <line x1=\"19\" y1=\"14.05\" x2=\"20.414\"\
+    \ y2=\"15.464\"/>\n+      <line x1=\"8.2\" y1=\"9.55\" x2=\"6.2\" y2=\"9.55\"\
+    />\n+      <line x1=\"20.8\" y1=\"9.55\" x2=\"22.8\" y2=\"9.55\"/>\n+      <line\
+    \ x1=\"10.044\" y1=\"14.006\" x2=\"8.63\" y2=\"15.42\"/>\n+      <line x1=\"19\"\
+    \ y1=\"5.05\" x2=\"20.414\" y2=\"3.636\"/>\n+      <circle cx=\"14.5\" cy=\"9.55\"\
+    \ r=\"3.6\"/>\n+    </svg>\n+  </symbol>\n+  <symbol id=\"svg-moon-with-sun\"\
+    \ viewBox=\"0 0 24 24\">\n+    <title>Auto light/dark, in dark mode</title>\n\
+    +    <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"\
+    \ stroke=\"currentColor\"\n+      stroke-width=\"1\" stroke-linecap=\"round\"\
+    \ stroke-linejoin=\"round\"\n+      class=\"icon-custom-derived-from-feather-sun-and-tabler-moon\"\
+    >\n+      <path d=\"M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18\
+    \ 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851\
+    \ 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652\
+    \ 7.021 7.965 7 8.282 7 L 8.282 7.007 Z\"/>\n+      <line class=\"icon-opacity\"\
+    \ x1=\"18\" y1=\"3.705\" x2=\"18\" y2=\"2.5\"/>\n+      <line class=\"icon-opacity\"\
+    \ x1=\"18\" y1=\"11.295\" x2=\"18\" y2=\"12.5\"/>\n+      <line class=\"icon-opacity\"\
+    \ x1=\"15.316\" y1=\"4.816\" x2=\"14.464\" y2=\"3.964\"/>\n+      <line class=\"\
+    icon-opacity\" x1=\"20.711\" y1=\"10.212\" x2=\"21.563\" y2=\"11.063\"/>\n+  \
+    \    <line class=\"icon-opacity\" x1=\"14.205\" y1=\"7.5\" x2=\"13.001\" y2=\"\
+    7.5\"/>\n+      <line class=\"icon-opacity\" x1=\"21.795\" y1=\"7.5\" x2=\"23\"\
+    \ y2=\"7.5\"/>\n+      <line class=\"icon-opacity\" x1=\"15.316\" y1=\"10.184\"\
+    \ x2=\"14.464\" y2=\"11.036\"/>\n+      <line class=\"icon-opacity\" x1=\"20.711\"\
+    \ y1=\"4.789\" x2=\"21.563\" y2=\"3.937\"/>\n+      <circle class=\"icon-opacity\"\
+    \ cx=\"18\" cy=\"7.5\" r=\"2.169\"/>\n+    </svg>\n+  </symbol>\n+  <symbol id=\"\
+    svg-pencil\" viewBox=\"0 0 24 24\">\n+    <svg xmlns=\"http://www.w3.org/2000/svg\"\
+    \ viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\n+      stroke-width=\"\
+    1\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"icon-tabler-pencil-code\"\
+    >\n+      <path d=\"M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4\"\
+    \ />\n+      <path d=\"M13.5 6.5l4 4\" />\n+      <path d=\"M20 21l2 -2l-2 -2\"\
+    \ />\n+      <path d=\"M17 17l-2 2l2 2\" />\n+    </svg>\n+  </symbol>\n+  <symbol\
+    \ id=\"svg-eye\" viewBox=\"0 0 24 24\">\n+    <svg xmlns=\"http://www.w3.org/2000/svg\"\
+    \ viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\n+      stroke-width=\"\
+    1\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"icon-tabler-eye-code\"\
+    >\n       <path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\" />\n-      <circle\
+    \ cx=\"12\" cy=\"12\" r=\"9\" />\n-      <path d=\"M13 12h5\" />\n-      <path\
+    \ d=\"M13 15h4\" />\n-      <path d=\"M13 18h1\" />\n-      <path d=\"M13 9h4\"\
+    \ />\n-      <path d=\"M13 6h1\" />\n+      <path d=\"M10 12a2 2 0 1 0 4 0a2 2\
+    \ 0 0 0 -4 0\" />\n+      <path\n+        d=\"M11.11 17.958c-3.209 -.307 -5.91\
+    \ -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688\
+    \ -.647 1.008\" />\n+      <path d=\"M20 21l2 -2l-2 -2\" />\n+      <path d=\"\
+    M17 17l-2 2l2 2\" />\n     </svg>\n   </symbol>\n </svg>\ndiff --git a/requirements-docs-lock.txt\
+    \ b/requirements-docs-lock.txt\nindex 26ae627b4d..d31ffceda0 100644\n--- a/requirements-docs-lock.txt\n\
+    +++ b/requirements-docs-lock.txt\n@@ -116,9 +116,9 @@ docutils==0.19 \\\n    \
+    \ --hash=sha256:33995a6753c30b7f577febfc2c50411fec6aac7f7ffeb7c4cfe5991072dcf9e6\
+    \ \\\n     --hash=sha256:5e1de4d849fee02c63b040a4a3fd567f4ab104defd8a5511fbbc24a8a017efbc\n\
+    \     # via sphinx\n-furo==2022.12.7 \\\n-    --hash=sha256:7cb76c12a25ef65db85ab0743df907573d03027a33631f17d267e598ebb191f7\
+    \ \\\n-    --hash=sha256:d8008f8efbe7587a97ba533c8b2df1f9c21ee9b3e5cad0d27f61193d38b1a986\n\
+    +furo==2024.8.6 \\\n+    --hash=sha256:6cd97c58b47813d3619e63e9081169880fbe331f0ca883c871ff1f3f11814f5c\
+    \ \\\n+    --hash=sha256:b63e4cee8abfc3136d3bc03a3d45a76a850bada4d6374d24c1716b0e01394a01\n\
+    \     # via -r requirements-docs.txt\n idna==3.7 \\\n     --hash=sha256:028ff3aadf0609c1fd278d8ea3089299412a7a8b9bd005dd08b9f8285bcb5cfc\
+    \ \\\n@@ -224,9 +224,9 @@ soupsieve==2.5 \\\n     --hash=sha256:5663d5a7b3bfaeee0bc4372e7fc48f9cff4940b3eec54a6451cc5299f1097690\
+    \ \\\n     --hash=sha256:eaa337ff55a1579b6549dc679565eac1e3d000563bcb1c8ab0d0fefbc0c2cdc7\n\
+    \     # via beautifulsoup4\n-sphinx==5.3.0 \\\n-    --hash=sha256:060ca5c9f7ba57a08a1219e547b269fadf125ae25b06b9fa7f66768efb652d6d\
+    \ \\\n-    --hash=sha256:51026de0a9ff9fc13c05d74913ad66047e104f56a129ff73e174eb5c3ee794b5\n\
+    +sphinx==7.1.2 ; python_version < \"3.9\" \\\n+    --hash=sha256:780f4d32f1d7d1126576e0e5ecc19dc32ab76cd24e950228dcf7b1f6d3d9e22f\
+    \ \\\n+    --hash=sha256:d170a81825b2fcacb6dfd5a0d7f578a053e45d3f2b153fecc948c37344eb4cbe\n\
+    \     # via\n     #   -r requirements-docs.txt\n     #   furo\ndiff --git a/requirements-docs.txt\
+    \ b/requirements-docs.txt\nindex de99cd6ebd..a2d6ad2531 100644\n--- a/requirements-docs.txt\n\
+    +++ b/requirements-docs.txt\n@@ -1,5 +1,7 @@\n-sphinx==5.3.0\n-furo==2022.12.7\n\
+    +sphinx==7.4.7 ; python_version >= \"3.9\"\n+# Use sphinx 7.1.2 for Python 3.8\n\
+    +sphinx==7.1.2 ; python_version < \"3.9\"\n+furo==2024.08.06\n sphinx_copybutton==0.5.1\n\
+    \ sphinx-remove-toctrees==0.0.3\n # Avoid urllib3 2.x below Python 3.10\n"
+- repository: bottlepy/bottle
+  pr:
+    number: 1482
+    title: Make FileUpload.save accept Path instance for destination
+    url: https://github.com/bottlepy/bottle/pull/1482
+  status: success
+  synthesized_issue: |-
+    # Unable to save FileUpload to Path instances
+
+    When attempting to save a `FileUpload` instance to a `Path` object (e.g. from the `pathlib` module), the following error is raised:
+
+    ```python
+    TypeError: save() argument 1 must be str, not Path
+    ```
+
+    The `FileUpload.save()` method currently only accepts string paths or file-like objects as the destination parameter. However, it would be more convenient and idiomatic to allow `Path` instances as well, since they provide a modern object-oriented way of handling file paths in Python.
+
+    It would be great if the `FileUpload.save()` method could handle `Path` instances seamlessly, either by converting them to strings internally or by accepting `Path` objects directly. This would improve the user experience and make the API more flexible and future-proof.
+  llm_prompt: "Repository: bottlepy/bottle\n\n\n--- Context: Existing Open Issues\
+    \ ---\nIssue 1 (Number: 1303):\n  Title: remove redundant `return None`\n----------\n\
+    Issue 2 (Number: 1478):\n  Title: Feature request: Modify static_file to accept\
+    \ an in-memory file object\n  Body (Preview):\n`static_file` expects a filename\
+    \ and path:\n\n```\ndef static_file(filename, root,\n                mimetype=True,\n\
+    \                download=False,\n                charset='UTF-8',\n         \
+    \       etag=None,\n                headers=None):\n```\n\nQuite a common pattern\
+    \ for me building internal tools is the user uploads a file and gets a file back.\
+    \  So I find myself wanting to write something like:\n\n```\n@route(\"/process\"\
+    , method='POST')\ndef process_file():\n    f_in = request.files.get(\"upload\"\
+    ).file...\n----------\nIssue 3 (Number: 1328):\n  Title: Translation of Bottle\
+    \ in German\n  Body (Preview):\nI want to start to learn using bottle. Therefore\
+    \ I want a documentation in German. I looked into the source code and found German\
+    \ *.po strings. There is also a reference of the translation in transifex. But\
+    \ I can't login there with my Github account and I don't get an email to reset\
+    \ my account.\n\nSo my question is: Can you provide a German PDF?\nI will then\
+    \ add more translated strings/files via PR.\n\nMechtilde\n----------\nIssue 4\
+    \ (Number: 1470):\n  Title: New MultipartParser fails on files above 102400 bytes\n\
+    \  Body (Preview):\n**Affected versions:** 0.13+ (tested in 0.13.2, issue is still\
+    \ present in code for 0.14)\nWorks in 0.12.25\n\nThe new MultipartParser released\
+    \ in [Version 0.13](https://bottlepy.org/docs/dev/changelog.html#release-0-13)\
+    \ raises a MultipartError(\"Memory limit reached.\") when the total file size\
+    \ exceeds 102400 bytes. This is due to MEMFILE_MAX being passed in (possibly mistakenly?)\
+    \ as the memory limit on [line 1353](https://github.com/bottlepy/bottle/blob/master/bottle.py#L1353).\n\
+    \n![image](https:...\n----------\nIssue 5 (Number: 1318):\n  Title: change `dict()`\
+    \ to litrtal `{}`\n----------\n\n--- Pull Request #1482 Details ---\nPR Title:\
+    \ Make FileUpload.save accept Path instance for destination\n\nPR Body:\nPath\
+    \ instance is detected and converted to str. No other changes.\n\n\n--- Commit\
+    \ Messages ---\n\nMake FileUpload.save accept Path instance for destination\n\n\
+    Path instance is detected and converted to str.\n\n\n--- Diff ---\n\ndiff --git\
+    \ a/bottle.py b/bottle.py\nindex 38a9732f..cba9f44c 100755\n--- a/bottle.py\n\
+    +++ b/bottle.py\n@@ -76,6 +76,7 @@ def _cli_patch(cli_args):  # pragma: no coverage\n\
+    \ from tempfile import NamedTemporaryFile\n from traceback import format_exc,\
+    \ print_exc\n from unicodedata import normalize\n+from pathlib import Path\n \n\
+    \ try:\n     from ujson import dumps as json_dumps, loads as json_lds\n@@ -2673,6\
+    \ +2674,8 @@ def save(self, destination, overwrite=False, chunk_size=2 ** 16):\n\
+    \             :param overwrite: If True, replace existing files. (default: False)\n\
+    \             :param chunk_size: Bytes to read at a time. (default: 64kb)\n  \
+    \       \"\"\"\n+        if isinstance(destination, Path):\n+            destination\
+    \ = str(destination)\n         if isinstance(destination, str):  # Except file-likes\
+    \ here\n             if os.path.isdir(destination):\n                 destination\
+    \ = os.path.join(destination, self.filename)\n\n\n--- Task ---\nBased on the PR\
+    \ details and the context from existing issues provided above, please generate\
+    \ the text (title and body) for a new, plausible GitHub issue that the pull request\
+    \ #1482 appears to resolve. Output only the issue title and body in markdown format.\n"
+  diff: "diff --git a/bottle.py b/bottle.py\nindex 38a9732f..cba9f44c 100755\n---\
+    \ a/bottle.py\n+++ b/bottle.py\n@@ -76,6 +76,7 @@ def _cli_patch(cli_args):  #\
+    \ pragma: no coverage\n from tempfile import NamedTemporaryFile\n from traceback\
+    \ import format_exc, print_exc\n from unicodedata import normalize\n+from pathlib\
+    \ import Path\n \n try:\n     from ujson import dumps as json_dumps, loads as\
+    \ json_lds\n@@ -2673,6 +2674,8 @@ def save(self, destination, overwrite=False,\
+    \ chunk_size=2 ** 16):\n             :param overwrite: If True, replace existing\
+    \ files. (default: False)\n             :param chunk_size: Bytes to read at a\
+    \ time. (default: 64kb)\n         \"\"\"\n+        if isinstance(destination,\
+    \ Path):\n+            destination = str(destination)\n         if isinstance(destination,\
+    \ str):  # Except file-likes here\n             if os.path.isdir(destination):\n\
+    \                 destination = os.path.join(destination, self.filename)\n"
+- repository: celery/celery
+  pr:
+    number: 9655
+    title: Fix for apply_async(ignore_result=False)
+    url: https://github.com/celery/celery/pull/9655
+  status: success
+  synthesized_issue: |-
+    # Celery Tasks Not Storing Results Despite `ignore_result=False`
+
+    When executing a Celery task with `apply_async(ignore_result=False)`, the task result is not being stored even though `ignore_result` is set to `False`. This issue occurs when the Celery app configuration has `task_ignore_results=True` set globally.
+
+    The expected behavior is that setting `ignore_result=False` when calling `apply_async` should override the global `task_ignore_results` setting and force the task result to be stored. However, currently, the task result is not being stored, leading to potential issues when needing to retrieve the result later.
+
+    Steps to Reproduce:
+
+    1. Configure Celery app with `task_ignore_results=True` in the config file.
+    2. Define a Celery task.
+    3. Call `apply_async` on the task with `ignore_result=False`.
+    4. Attempt to retrieve the task result.
+
+    The task result should be available, but it is not being stored due to the global `task_ignore_results` setting taking precedence over the `ignore_result` argument passed to `apply_async`.
+
+    This issue causes inconsistent behavior and can lead to unexpected errors or failures when relying on task results in certain situations.
+  llm_prompt: "Repository: celery/celery\n\n\n--- Context: Existing Open Issues ---\n\
+    Issue 1 (Number: 9561):\n  Title: Kwarg task_id is not documented in Task.apply_async\n\
+    \  Body (Preview):\n- [ x ] I have checked the [issues list](https://github.com/celery/celery/issues?utf8=%E2%9C%93&q=is%3Aissue+label%3A%22Category%3A+Documentation%22+)\n\
+    \  for similar or identical bug reports.\n- [ x ] I have checked the [pull requests\
+    \ list](https://github.com/celery/celery/pulls?q=is%3Apr+label%3A%22Category%3A+Documentation%22)\n\
+    \  for existing proposed fixes.\n- [ x ] I have checked the [commit log](https://github.com/celery/celery/commits/main)\n\
+    \  to find out if the bug was already fixed in the mai...\n----------\nIssue 2\
+    \ (Number: 9581):\n  Title: Type Issue with task.delay Not Recognized as Proxy\
+    \ in VSCode/Pylance\n  Body (Preview):\nWhen creating a task in Celery using either\
+    \ @shared_task or app.task, then calling task.delay(), VSCode with Pylance (latest\
+    \ version) fails to identify the correct type. Specifically, the result type returned\
+    \ from task.delay() should be recognized as Proxy, but Pylance seems unable to\
+    \ infer this correctly. This causes a type error or warning in the editor.\n\n\
+    Steps to Reproduce:\nCreate a simple Celery task using @shared_task or app.task:\n\
+    \n\n```\nfrom celery import shared_task\n\n\n@shared_task\ndef my_t...\n----------\n\
+    Issue 3 (Number: 9631):\n  Title: Celery consumers losing connection behind redis\
+    \ haproxy\n  Body: [Omitted due to length (4972 > 2000 chars)]\n----------\nIssue\
+    \ 4 (Number: 9544):\n  Title: Bump pymongo from 4.10.1 to 4.11\n  Body: [Omitted\
+    \ due to length (9093 > 2000 chars)]\n----------\nIssue 5 (Number: 9604):\n  Title:\
+    \ Replacing a task with a chain which contains a group now returns a result instead\
+    \ of hanging\n  Body (Preview):\n## Description\n\nThe following task\n\n```python\n\
+    @shared_task(bind=True)\ndef replace_with_chain_which_contains_a_group(self):\n\
+    \    return self.replace(chain(add.s(1, 2), group(add.s(1), add.s(1))))\n```\n\
+    \ndid not return a result. This PR fixes the issue and now a result is returned\
+    \ correctly instead of hanging until timeout occurs.\n----------\n(2 issue bodies\
+    \ omitted due to length limit of 2000 chars.)\n\n--- Pull Request #9655 Details\
+    \ ---\nPR Title: Fix for apply_async(ignore_result=False)\n\nPR Body:\n`apply_async(ignore_result=False)`\
+    \ now stores the result when `celeryconfig` has `task_ignore_results=True`\n\n\
+    See bug description on https://github.com/celery/celery/issues/9654 \n\n\n---\
+    \ Issue Comments ---\n\nI don't know if `TraceInfo.handle_error_state` also needs\
+    \ a similar adjustment.\n\n\n--- Commit Messages ---\n\nFix for apply_async(ignore_result=False)\n\
+    \napply_async(ignore_result=False) now stores the result when celeryconfig has\n\
+    task_ignore_results=True\n\n\n--- Diff ---\n\ndiff --git a/celery/app/trace.py\
+    \ b/celery/app/trace.py\nindex 2e8cf8a318..d2c233cba9 100644\n--- a/celery/app/trace.py\n\
+    +++ b/celery/app/trace.py\n@@ -327,7 +327,7 @@ def build_tracer(name, task, loader=None,\
+    \ hostname=None, store_errors=True,\n     fun = task if task_has_custom(task,\
+    \ '__call__') else task.run\n \n     loader = loader or app.loader\n-    ignore_result\
+    \ = task.ignore_result\n+    ignore_result = task.request.ignore_result\n    \
+    \ track_started = task.track_started\n     track_started = not eager and (task.track_started\
+    \ and not ignore_result)\n \n\n\n--- Task ---\nBased on the PR details and the\
+    \ context from existing issues provided above, please generate the text (title\
+    \ and body) for a new, plausible GitHub issue that the pull request #9655 appears\
+    \ to resolve. Output only the issue title and body in markdown format.\n"
+  diff: "diff --git a/celery/app/trace.py b/celery/app/trace.py\nindex 2e8cf8a318..d2c233cba9\
+    \ 100644\n--- a/celery/app/trace.py\n+++ b/celery/app/trace.py\n@@ -327,7 +327,7\
+    \ @@ def build_tracer(name, task, loader=None, hostname=None, store_errors=True,\n\
+    \     fun = task if task_has_custom(task, '__call__') else task.run\n \n     loader\
+    \ = loader or app.loader\n-    ignore_result = task.ignore_result\n+    ignore_result\
+    \ = task.request.ignore_result\n     track_started = task.track_started\n    \
+    \ track_started = not eager and (task.track_started and not ignore_result)\n \n"
+- repository: certbot/certbot
+  pr:
+    number: 10249
+    title: Add --use-pep517 flag to pip to silence warning in tools/venv.py
+    url: https://github.com/certbot/certbot/pull/10249
+  status: success
+  synthesized_issue: |-
+    # Error installing or running Certbot due to pip warning or editable mode failure
+
+    When trying to install or run Certbot, I'm seeing the following warning or error related to pip and editable mode:
+
+    ```
+    WARNING: The editable mode (e.g. `pip install -e`) is deprecated and will be removed in the future. Use `pip install --use-pep517` instead.
+    ```
+
+    Or:
+
+    ```
+    Error: Failed to install dependencies for the package in editable mode.
+    ```
+
+    This seems to be preventing Certbot from installing or running properly. I'm not sure what the underlying cause is, but it looks like there may be an issue with how Certbot is handling editable mode installations or pip warnings. It would be great if this could be addressed to allow for a smooth installation and operation of Certbot.
+  llm_prompt: "Repository: certbot/certbot\n\n\n--- Context: Existing Open Issues\
+    \ ---\nIssue 1 (Number: 10219):\n  Title: Certbot hangs on auto and manual renewal,\
+    \ but never errors out\n  Body: [Omitted due to length (5170 > 2000 chars)]\n\
+    ----------\nIssue 2 (Number: 10184):\n  Title: Post request /acme/authz returned\
+    \ 404 No such authorization error\n  Body: [Omitted due to length (4502 > 2000\
+    \ chars)]\n----------\nIssue 3 (Number: 10119):\n  Title: Issue #8070 should not\
+    \ have been auto-closed\n  Body (Preview):\n(Is this what I'm supposed to do?\
+    \ The github-actions bot said so.)\n\nIssue https://github.com/certbot/certbot/issues/8070\
+    \ was closed by github-actions despite still being present.\n\nThe function to\
+    \ change ownership is called unconditionally whenever a new private key is written:\
+    \ https://github.com/certbot/certbot/blob/985457e57bfde52d3702dea4e500a1b54ea1c745/certbot/certbot/_internal/storage.py#L1205-L1213\n\
+    \nAnd the function that does the chown just calls chown expecting it to work:\
+    \ https://g...\n----------\nIssue 4 (Number: 10225):\n  Title: Improve the error\
+    \ message when `certbot renew` is used with the `-d` option\n  Body (Preview):\n\
+    I lost an unreasonable amount of time on this.\n\n## Pull Request Checklist\n\n\
+    - [x] The Certbot team has recently expressed interest in reviewing a PR for this.\
+    \ If not, this PR may be closed due our limited resources and need to prioritize\
+    \ how we spend them.\n- [ ] ~~If the change being made is to a [distributed component](https://certbot.eff.org/docs/contributing.html#code-components-and-layout),\
+    \ edit the `main` section of `certbot/CHANGELOG.md` to include a description of\
+    \ the change being mad...\n----------\nIssue 5 (Number: 10246):\n  Title: [Feature\
+    \ Request]: Streamline startup, utilize a new or secondary data storage\n  Body\
+    \ (Preview):\n### What problem does this feature solve or what does it enhance?\n\
+    \nCertbot takes a while to load and parse the directory structure for data.  It\
+    \ does not do well on large installations.  I think the data storage and initial\
+    \ load should be revisited sooner than later.\n\nThe current design creates problems\
+    \ with the draft ARI spec implementations, and will be exacerbated with the upcoming\
+    \ short-lived certificates.  The current implementation of the ARI by Boulder\
+    \ offers a time-based window for `repl...\n----------\n(2 issue bodies omitted\
+    \ due to length limit of 2000 chars.)\n\n--- Pull Request #10249 Details ---\n\
+    PR Title: Add --use-pep517 flag to pip to silence warning in tools/venv.py\n\n\
+    PR Body:\nAttempt to fix #10252\n\nSee further discussion here: https://github.com/pypa/pip/issues/11457\n\
+    \nWe are doing option:\n\n> Alternatively, enable the --use-pep517 pip option,\
+    \ possibly with --no-build-isolation. The --use-pip517 flag will force pip to\
+    \ use the modern mechanism for editable installs. --no-build-isolation may be\
+    \ needed if your project has build-time requirements beyond setuptools and wheel.\
+    \ By passing this flag, you are responsible for making sure your environment already\
+    \ has the required dependencies to build your package. Once the legacy mechanism\
+    \ is removed, --use-pep517 will have no effect and will essentially be enabled\
+    \ by default in this context.\n\nThis is not in fact working; mypy tests indicate\
+    \ that they're not finding the other modules, and oldest tests are failing.\n\n\
+    \n--- Commit Messages ---\n\nAdd --use-pep517 flag to pip to silence warning\n\
+    \nMerge branch 'main' into pip-517\n\nMerge branch 'main' into pip-517\n\nadd\
+    \ editable_mode=compat config setting\n\nadd no build isolation\n\nfix typo\n\n\
+    \n--- Diff ---\n\ndiff --git a/tools/pip_install.py b/tools/pip_install.py\nindex\
+    \ 03c7714381..8fa1bd0edb 100755\n--- a/tools/pip_install.py\n+++ b/tools/pip_install.py\n\
+    @@ -29,7 +29,7 @@ def call_with_print(command, env):\n \n \n def pip_install_with_print(args_str,\
+    \ env):\n-    command = ['\"', sys.executable, '\" -m pip install --disable-pip-version-check\
+    \ ', args_str]\n+    command = ['\"', sys.executable, '\" -m pip install --disable-pip-version-check\
+    \ --use-pep517 --config-settings editable_mode=compat --no-build-isolation ',\
+    \ args_str]\n     call_with_print(''.join(command), env=env)\n \n \n\n\n--- Task\
+    \ ---\nBased on the PR details and the context from existing issues provided above,\
+    \ please generate the text (title and body) for a new, plausible GitHub issue\
+    \ that the pull request #10249 appears to resolve. Output only the issue title\
+    \ and body in markdown format.\n"
+  diff: "diff --git a/tools/pip_install.py b/tools/pip_install.py\nindex 03c7714381..8fa1bd0edb\
+    \ 100755\n--- a/tools/pip_install.py\n+++ b/tools/pip_install.py\n@@ -29,7 +29,7\
+    \ @@ def call_with_print(command, env):\n \n \n def pip_install_with_print(args_str,\
+    \ env):\n-    command = ['\"', sys.executable, '\" -m pip install --disable-pip-version-check\
+    \ ', args_str]\n+    command = ['\"', sys.executable, '\" -m pip install --disable-pip-version-check\
+    \ --use-pep517 --config-settings editable_mode=compat --no-build-isolation ',\
+    \ args_str]\n     call_with_print(''.join(command), env=env)\n \n \n"
+- repository: cherrypy/cherrypy
+  pr:
+    number: 2022
+    title: '[pre-commit.ci] pre-commit autoupdate'
+    url: https://github.com/cherrypy/cherrypy/pull/2022
+  status: success
+  synthesized_issue: "# Pre-commit hooks outdated and need updating\n\nThe pre-commit\
+    \ hooks used for code linting and formatting in this repository are out of date.\
+    \ The versions specified in the .pre-commit-config.yaml file are behind the latest\
+    \ releases for hooks like flake8, pre-commit-hooks, yamllint, etc. \n\nThis can\
+    \ lead to inconsistencies in code style, missing new linting rules, and potential\
+    \ false positive/negative lint warnings. Having the pre-commit hooks updated to\
+    \ their latest versions will ensure the project follows the most up-to-date coding\
+    \ standards and best practices."
+  llm_prompt: "Repository: cherrypy/cherrypy\n\n\n--- Context: Existing Open Issues\
+    \ ---\nIssue 1 (Number: 1990):\n  Title: Bug in Timing tool example and before_handler\
+    \ docs improvement.\n  Body (Preview):\nHi guys!\n\nI found an error in documentation\
+    \ related to TimingTool example.\n\n`before_handler` never happens if there are\
+    \ an error at request body processing step.\n\nSo suggesting improvement of TimingTool\
+    \ example and before_handler event in docs.\n----------\nIssue 2 (Number: 2027):\n\
+    \  Title: Add test coverage for `HeaderElement` and `AcceptElement`\n  Body (Preview):\n\
+    This is in preparation for issue #2014\nEstablishing tests to validate these objects\
+    \ so we can pull in the deprecated cgi.parse_header code\n\n**What kind of change\
+    \ does this PR introduce?**\n  - [x] tests/coverage improvement\n----------\n\
+    Issue 3 (Number: 2025):\n  Title: CherryPy SSL Built-in Adapter Causing Port Contention\
+    \ with Netcat\n  Body: [Omitted due to length (3036 > 2000 chars)]\n----------\n\
+    Issue 4 (Number: 1987):\n  Title: problems with outgoing secure connections\n\
+    \  Body (Preview):\n**I'm submitting a ...**\n- [ ] bug report\n\n**What is the\
+    \ current behavior?**\n\nin my cherrypy project, a module (rosreestr2coord) is\
+    \ used, which should access the site api over a secure connection and receive\
+    \ the necessary content. When this module is run through the interpreter, or just\
+    \ through a file, then everything is in order. But when this module is used in\
+    \ a running cherrypy server, a connection refused occurs.\n\n**If the current\
+    \ behavior is a bug, please provide the steps to reprodu...\n----------\nIssue\
+    \ 5 (Number: 2010):\n  Title: Use `os.listdir()` instead of `os.scandir()` in\
+    \ `FileSession` during clean-up\n  Body (Preview):\n`os.scandir()` is more effcient\
+    \ than `os.listdir()` and is generator based.\n\n**What kind of change does this\
+    \ PR introduce?**\n  - [ ] bug fix\n  - [ ] feature\n  - [ ] docs update\n  -\
+    \ [ ] tests/coverage improvement\n  - [ ] refactoring\n  - [X] other\n\n\n\n**What\
+    \ is the related issue number (starting with `#`)**\n\n\n\n**What is the current\
+    \ behavior?** (You can also link to an open issue here)\n\n\n\n**What is the new\
+    \ behavior (if this is a feature change)?**\nwhen cleaning file-based sessio...\n\
+    ----------\n(1 issue bodies omitted due to length limit of 2000 chars.)\n\n---\
+    \ Pull Request #2022 Details ---\nPR Title: [pre-commit.ci] pre-commit autoupdate\n\
+    \nPR Body:\n<!--pre-commit.ci start-->\nupdates:\n- [github.com/pre-commit/pre-commit-hooks.git:\
+    \ v1.1.1 → v5.0.0](https://github.com/pre-commit/pre-commit-hooks.git/compare/v1.1.1...v5.0.0)\n\
+    - [github.com/PyCQA/flake8.git: 7.1.0 → 7.2.0](https://github.com/PyCQA/flake8.git/compare/7.1.0...7.2.0)\n\
+    - [github.com/Lucas-C/pre-commit-hooks.git: v1.5.4 → v1.5.5](https://github.com/Lucas-C/pre-commit-hooks.git/compare/v1.5.4...v1.5.5)\n\
+    - [github.com/adrienverge/yamllint.git: v1.34.0 → v1.37.0](https://github.com/adrienverge/yamllint.git/compare/v1.34.0...v1.37.0)\n\
+    <!--pre-commit.ci end-->\n\n\n--- Commit Messages ---\n\n[pre-commit.ci] pre-commit\
+    \ autoupdate\n\nupdates:\n- [github.com/pre-commit/pre-commit-hooks.git: v1.1.1\
+    \ → v5.0.0](https://github.com/pre-commit/pre-commit-hooks.git/compare/v1.1.1...v5.0.0)\n\
+    - [github.com/PyCQA/flake8.git: 7.1.0 → 7.2.0](https://github.com/PyCQA/flake8.git/compare/7.1.0...7.2.0)\n\
+    - [github.com/Lucas-C/pre-commit-hooks.git: v1.5.4 → v1.5.5](https://github.com/Lucas-C/pre-commit-hooks.git/compare/v1.5.4...v1.5.5)\n\
+    - [github.com/adrienverge/yamllint.git: v1.34.0 → v1.37.0](https://github.com/adrienverge/yamllint.git/compare/v1.34.0...v1.37.0)\n\
+    \n[pre-commit.ci] auto fixes from pre-commit.com hooks\n\nfor more information,\
+    \ see https://pre-commit.ci\n\n\n--- Diff ---\n\ndiff --git a/.github/ISSUE_TEMPLATE.md\
+    \ b/.github/ISSUE_TEMPLATE.md\nindex af86b79f9..dbf77f798 100644\n--- a/.github/ISSUE_TEMPLATE.md\n\
+    +++ b/.github/ISSUE_TEMPLATE.md\n@@ -1,12 +1,12 @@\n <!--\n-**** DELETE THIS BLOCK\
+    \ ****  \n+**** DELETE THIS BLOCK ****\n \n Thanks for filing an issue!  Please\
+    \ keep issues limited to bug reports,\n feature requests, and other general issues.\
+    \ For support questions, please feel\n free to reach out on stackoverflow:\n https://stackoverflow.com/questions/tagged/cherrypy\n\
+    \ \n-**** /DELETE THIS BLOCK ****  \n+**** /DELETE THIS BLOCK ****\n -->\n \n\
+    \ **I'm submitting a ...**\ndiff --git a/.pre-commit-config.yaml b/.pre-commit-config.yaml\n\
+    index 623ad9872..29eee6851 100644\n--- a/.pre-commit-config.yaml\n+++ b/.pre-commit-config.yaml\n\
+    @@ -9,7 +9,7 @@ repos:\n #     - --in-place\n \n - repo: https://github.com/pre-commit/pre-commit-hooks.git\n\
+    -  rev: v1.1.1\n+  rev: v5.0.0\n   hooks:\n   - id: trailing-whitespace\n    \
+    \ exclude: cherrypy/test/static/index.html\n@@ -40,7 +40,7 @@ repos:\n   - id:\
+    \ pydocstyle\n \n - repo: https://github.com/PyCQA/flake8.git\n-  rev: 7.1.0\n\
+    +  rev: 7.2.0\n   hooks:\n   - id: flake8\n     additional_dependencies:\n@@ -50,7\
+    \ +50,7 @@ repos:\n     # - flake8-pytest-style ~= 1.7.2\n \n - repo: https://github.com/Lucas-C/pre-commit-hooks.git\n\
+    -  rev: v1.5.4\n+  rev: v1.5.5\n   hooks:\n   - id: remove-tabs\n \n@@ -60,7 +60,7\
+    \ @@ repos:\n   - id: forbid-html-img-without-alt-text\n \n - repo: https://github.com/adrienverge/yamllint.git\n\
+    -  rev: v1.34.0\n+  rev: v1.37.0\n   hooks:\n   - id: yamllint\n     files: \\\
+    .(yaml|yml)$\n\n\n--- Task ---\nBased on the PR details and the context from existing\
+    \ issues provided above, please generate the text (title and body) for a new,\
+    \ plausible GitHub issue that the pull request #2022 appears to resolve. Output\
+    \ only the issue title and body in markdown format.\n"
+  diff: "diff --git a/.github/ISSUE_TEMPLATE.md b/.github/ISSUE_TEMPLATE.md\nindex\
+    \ af86b79f9..dbf77f798 100644\n--- a/.github/ISSUE_TEMPLATE.md\n+++ b/.github/ISSUE_TEMPLATE.md\n\
+    @@ -1,12 +1,12 @@\n <!--\n-**** DELETE THIS BLOCK ****  \n+**** DELETE THIS BLOCK\
+    \ ****\n \n Thanks for filing an issue!  Please keep issues limited to bug reports,\n\
+    \ feature requests, and other general issues. For support questions, please feel\n\
+    \ free to reach out on stackoverflow:\n https://stackoverflow.com/questions/tagged/cherrypy\n\
+    \ \n-**** /DELETE THIS BLOCK ****  \n+**** /DELETE THIS BLOCK ****\n -->\n \n\
+    \ **I'm submitting a ...**\ndiff --git a/.pre-commit-config.yaml b/.pre-commit-config.yaml\n\
+    index 623ad9872..29eee6851 100644\n--- a/.pre-commit-config.yaml\n+++ b/.pre-commit-config.yaml\n\
+    @@ -9,7 +9,7 @@ repos:\n #     - --in-place\n \n - repo: https://github.com/pre-commit/pre-commit-hooks.git\n\
+    -  rev: v1.1.1\n+  rev: v5.0.0\n   hooks:\n   - id: trailing-whitespace\n    \
+    \ exclude: cherrypy/test/static/index.html\n@@ -40,7 +40,7 @@ repos:\n   - id:\
+    \ pydocstyle\n \n - repo: https://github.com/PyCQA/flake8.git\n-  rev: 7.1.0\n\
+    +  rev: 7.2.0\n   hooks:\n   - id: flake8\n     additional_dependencies:\n@@ -50,7\
+    \ +50,7 @@ repos:\n     # - flake8-pytest-style ~= 1.7.2\n \n - repo: https://github.com/Lucas-C/pre-commit-hooks.git\n\
+    -  rev: v1.5.4\n+  rev: v1.5.5\n   hooks:\n   - id: remove-tabs\n \n@@ -60,7 +60,7\
+    \ @@ repos:\n   - id: forbid-html-img-without-alt-text\n \n - repo: https://github.com/adrienverge/yamllint.git\n\
+    -  rev: v1.34.0\n+  rev: v1.37.0\n   hooks:\n   - id: yamllint\n     files: \\\
+    .(yaml|yml)$\n"
+- repository: conan-io/conan
+  pr:
+    number: 15027
+    title: 'AutotoolsToolchain: Honor `tools.apple:enable_bitcode` & `tools.apple:enable_arc`'
+    url: https://github.com/conan-io/conan/pull/15027
+  status: success
+  synthesized_issue: |-
+    # Missing configuration options for Apple platforms in AutotoolsToolchain
+
+    When building for Apple platforms (iOS, tvOS, watchOS) using the AutotoolsToolchain, certain configuration options related to bitcode embedding and Objective-C Automatic Reference Counting (ARC) were not available. This could lead to build failures or unexpected behavior in some cases.
+
+    The AutotoolsToolchain did not honor the `tools.apple:enable_bitcode` and `tools.apple:enable_arc` configuration options from `conan.conf`. As a result, it was not possible to enable bitcode embedding or ARC when using the AutotoolsToolchain for Apple platform builds, even though these options are supported by other toolchains like CMakeToolchain.
+
+    To ensure consistent behavior across different toolchains and provide the necessary configuration options for Apple platform builds, the AutotoolsToolchain should support the `tools.apple:enable_bitcode` and `tools.apple:enable_arc` options from `conan.conf`.
+  llm_prompt: "Repository: conan-io/conan\n\n\n--- Context: Existing Open Issues ---\n\
+    Issue 1 (Number: 18043):\n  Title: [feature] Make AutotoolsDeps trait aware\n\
+    \  Body (Preview):\n### What is your suggestion?\n\nWhen AutotoolsDeps inserts\
+    \ the include dirs of the dependencies, it does not take into account the transitive_headers\
+    \ (nor any other trait for that matter!) of each dependency, which as a result\
+    \ sometimes breaks builds in unexpected ways.\n\nSee https://github.com/conan-io/conan-center-index/pull/26285\
+    \ where unexpected brotli include headers broke the build by including headers\
+    \ that no dependency exposed transitively\n\ncc @jcar87 \n\n### Have you read\
+    \ the CONTRIBUTING gu...\n----------\nIssue 2 (Number: 18048):\n  Title: [migrate]\
+    \ Help me migrate our open source project Nativium\n  Body (Preview):\nHi,\n\n\
+    Im migrating the project Nativium (https://github.com/nativium/nativium) from\
+    \ v1 to v2, believing that is support android/ios/watchos/tvos out-of-box instead\
+    \ need use our darwin-toolchain package (https://github.com/nativium/nativium/tree/main/conan/darwin-toolchain)\
+    \ anymore.\n\nI open a pull-request that show what i already changed in this migration.\n\
+    \n- add `*:` to some options/settings\n- move `conanfile.py` to root\n- move some\
+    \ paths to `conanfile.py` to root file (because previous step)\n\nPR...\n----------\n\
+    Issue 3 (Number: 18052):\n  Title: [bug] Intel-cc compiler.version=2025.0 is not\
+    \ supported\n  Body (Preview):\n### Describe the bug\n\nThe field compiler.version=2025.0\
+    \ is not supported at the moment with compiler=intel-cc\n\n### How to reproduce\
+    \ it\n\n_No response_\n----------\nIssue 4 (Number: 18036):\n  Title: [bug] Conan\
+    \ packages uploaded w/ compiler.cppstd=gnu17 and conan < v1.53 can't be installed\
+    \ by conan >= v1.53\n  Body (Preview):\n### Describe the bug\n\nOS: Linux\nCompiler:\
+    \ clang-17\nConan Version: Packages uploaded w/ 1.44.0, Downloads attempted on\
+    \ 1.53.0 and 1.66.0\n\nI have several older conan packages in our registry that\
+    \ were uploaded with the following profile:\n```\n[settings]\nos=Linux\narch=x86_64\n\
+    compiler=clang\ncompiler.version=17\ncompiler.cppstd=gnu17\ncompiler.libcxx=libstdc++11\n\
+    build_type=Release\n```\n\nThey were uploaded using conan 1.44.0 at the time and\
+    \ are successfully pulled/installed when using 1.52.0 or below.  As...\n----------\n\
+    Issue 5 (Number: 18069):\n  Title: [question]Facing issues in using self.copy\n\
+    \  Body (Preview):\n### What is your question?\n\nHi, I am using conan version\
+    \ 2.15.0. During conan create, I get the below error. I also provide the snippet\
+    \ of conanfile.py. What is this error and how to fix this? \n\nError:\nnew1/0.3@myuser/stable:\
+    \ Calling package()\nnew1/0.3@myuser/stable: Packaging the artifacts...\nnew1/0.3@myuser/stable:\
+    \ Checking for files in the source directory: src\nnew1/0.3@myuser/stable: Checking\
+    \ for file1.c...\nnew1/0.3@myuser/stable: file1.c exists.\nnew1/0.3@myuser/stable:\
+    \ Copying file1.c to pa...\n----------\n\n--- Pull Request #15027 Details ---\n\
+    PR Title: AutotoolsToolchain: Honor `tools.apple:enable_bitcode` & `tools.apple:enable_arc`\n\
+    \nPR Body:\nChangelog: (Feature): Honor `tools.apple:enable_bitcode` & `tools.apple:enable_arc`\
+    \ in `AutotoolsToolchain`.\nDocs: https://github.com/conan-io/docs/pull/XXXX\n\
+    \ncloses https://github.com/conan-io/conan/issues/12197\n\nSimilar to https://github.com/conan-io/conan/pull/10985\
+    \ but for AutotoolsToolchain., except that nothing is done for `tools.apple:enable_visibility`\
+    \ because I consider that this conf is useless and doesn't make sense.\nIn a sense\
+    \ `tools.apple:enable_bitcode` & `tools.apple:enable_arc` shouldn't have been\
+    \ added I think, but since they are here and implemented in `CMakeToolchain`,\
+    \ conan should be consistent in all toolchains (unless you want to deprecate these\
+    \ conf).\n\nAlso it's worth noting that https://github.com/conan-io/conan/issues/12197#issuecomment-1257286686\
+    \ is incorrect (or not correct anymore). openssl recipe uses AutootoolsToolchain\
+    \ in order to collect flags for configure step.\n\n- [x] Refer to the issue that\
+    \ supports this Pull Request.\n- [ ] If the issue has missing info, explain the\
+    \ purpose/use case/pain/need that covers this Pull Request.\n- [x] I've read the\
+    \ [Contributing guide](https://github.com/conan-io/conan/blob/develop/.github/CONTRIBUTING.md).\n\
+    - [ ] I've followed the PEP8 style guides for Python code.\n- [ ] I've opened\
+    \ another PR in the Conan docs repo to the ``develop`` branch, documenting this\
+    \ one.\n\n\n\n--- Issue Comments ---\n\nIm waiting for this for 2 years: https://github.com/conan-io/conan/issues/12197\n\
+    \n@AbrilRBS help here\n\n\n--- Commit Messages ---\n\nhonor `tools.apple:enable_bitcode`\
+    \ in AutotoolsToolchain\n\nhonor `tools.apple:enable_arc` in AutotoolsToolchain\n\
+    \ntypo\n\nMerge branch 'release/2.0' into feature/autotoolstoolchain-enable-bitcode\n\
+    \n\n--- Diff ---\n\ndiff --git a/conan/tools/gnu/autotoolstoolchain.py b/conan/tools/gnu/autotoolstoolchain.py\n\
+    index 296ba885a29..a18686d3a76 100644\n--- a/conan/tools/gnu/autotoolstoolchain.py\n\
+    +++ b/conan/tools/gnu/autotoolstoolchain.py\n@@ -107,12 +107,31 @@ def _get_msvc_runtime_flag(self):\n\
+    \     def _filter_list_empty_fields(v):\n         return list(filter(bool, v))\n\
+    \ \n+    @property\n+    def _bitcode_flags(self):\n+        if (\n+         \
+    \   self._conanfile.settings.get_safe(\"os\") in [\"iOS\", \"tvOS\", \"watchOS\"\
+    ]\n+            and self._conanfile.conf.get(\"tools.apple:enable_bitcode\", check_type=bool)\n\
+    +        ):\n+            return [\"-fembed-bitcode\"]\n+        return []\n+\n\
+    +    @property\n+    def _arc_flags(self):\n+        if (\n+            is_apple_os(self._conanfile)\n\
+    +            and self._conanfile.conf.get(\"tools.apple:enable_arc\", check_type=bool)\n\
+    +        ):\n+            return [\"-fobjc-arc\"]\n+        return []\n+\n   \
+    \  @property\n     def cxxflags(self):\n         fpic = \"-fPIC\" if self.fpic\
+    \ else None\n         ret = [self.libcxx, self.cppstd, self.arch_flag, fpic, self.msvc_runtime_flag,\n\
+    \                self.sysroot_flag]\n-        apple_flags = [self.apple_isysroot_flag,\
+    \ self.apple_arch_flag, self.apple_min_version_flag]\n+        apple_flags = [self.apple_isysroot_flag,\
+    \ self.apple_arch_flag, self.apple_min_version_flag] + \\\n+                 \
+    \     self._bitcode_flags + self._arc_flags\n         conf_flags = self._conanfile.conf.get(\"\
+    tools.build:cxxflags\", default=[], check_type=list)\n         ret = ret + self.build_type_flags\
+    \ + apple_flags + self.extra_cxxflags + conf_flags\n         return self._filter_list_empty_fields(ret)\n\
+    @@ -121,7 +140,8 @@ def cxxflags(self):\n     def cflags(self):\n         fpic\
+    \ = \"-fPIC\" if self.fpic else None\n         ret = [self.arch_flag, fpic, self.msvc_runtime_flag,\
+    \ self.sysroot_flag]\n-        apple_flags = [self.apple_isysroot_flag, self.apple_arch_flag,\
+    \ self.apple_min_version_flag]\n+        apple_flags = [self.apple_isysroot_flag,\
+    \ self.apple_arch_flag, self.apple_min_version_flag] + \\\n+                 \
+    \     self._bitcode_flags + self._arc_flags\n         conf_flags = self._conanfile.conf.get(\"\
+    tools.build:cflags\", default=[], check_type=list)\n         ret = ret + self.build_type_flags\
+    \ + apple_flags + self.extra_cflags + conf_flags\n         return self._filter_list_empty_fields(ret)\n\
+    \n\n--- Task ---\nBased on the PR details and the context from existing issues\
+    \ provided above, please generate the text (title and body) for a new, plausible\
+    \ GitHub issue that the pull request #15027 appears to resolve. Output only the\
+    \ issue title and body in markdown format.\n"
+  diff: "diff --git a/conan/tools/gnu/autotoolstoolchain.py b/conan/tools/gnu/autotoolstoolchain.py\n\
+    index 296ba885a29..a18686d3a76 100644\n--- a/conan/tools/gnu/autotoolstoolchain.py\n\
+    +++ b/conan/tools/gnu/autotoolstoolchain.py\n@@ -107,12 +107,31 @@ def _get_msvc_runtime_flag(self):\n\
+    \     def _filter_list_empty_fields(v):\n         return list(filter(bool, v))\n\
+    \ \n+    @property\n+    def _bitcode_flags(self):\n+        if (\n+         \
+    \   self._conanfile.settings.get_safe(\"os\") in [\"iOS\", \"tvOS\", \"watchOS\"\
+    ]\n+            and self._conanfile.conf.get(\"tools.apple:enable_bitcode\", check_type=bool)\n\
+    +        ):\n+            return [\"-fembed-bitcode\"]\n+        return []\n+\n\
+    +    @property\n+    def _arc_flags(self):\n+        if (\n+            is_apple_os(self._conanfile)\n\
+    +            and self._conanfile.conf.get(\"tools.apple:enable_arc\", check_type=bool)\n\
+    +        ):\n+            return [\"-fobjc-arc\"]\n+        return []\n+\n   \
+    \  @property\n     def cxxflags(self):\n         fpic = \"-fPIC\" if self.fpic\
+    \ else None\n         ret = [self.libcxx, self.cppstd, self.arch_flag, fpic, self.msvc_runtime_flag,\n\
+    \                self.sysroot_flag]\n-        apple_flags = [self.apple_isysroot_flag,\
+    \ self.apple_arch_flag, self.apple_min_version_flag]\n+        apple_flags = [self.apple_isysroot_flag,\
+    \ self.apple_arch_flag, self.apple_min_version_flag] + \\\n+                 \
+    \     self._bitcode_flags + self._arc_flags\n         conf_flags = self._conanfile.conf.get(\"\
+    tools.build:cxxflags\", default=[], check_type=list)\n         ret = ret + self.build_type_flags\
+    \ + apple_flags + self.extra_cxxflags + conf_flags\n         return self._filter_list_empty_fields(ret)\n\
+    @@ -121,7 +140,8 @@ def cxxflags(self):\n     def cflags(self):\n         fpic\
+    \ = \"-fPIC\" if self.fpic else None\n         ret = [self.arch_flag, fpic, self.msvc_runtime_flag,\
+    \ self.sysroot_flag]\n-        apple_flags = [self.apple_isysroot_flag, self.apple_arch_flag,\
+    \ self.apple_min_version_flag]\n+        apple_flags = [self.apple_isysroot_flag,\
+    \ self.apple_arch_flag, self.apple_min_version_flag] + \\\n+                 \
+    \     self._bitcode_flags + self._arc_flags\n         conf_flags = self._conanfile.conf.get(\"\
+    tools.build:cflags\", default=[], check_type=list)\n         ret = ret + self.build_type_flags\
+    \ + apple_flags + self.extra_cflags + conf_flags\n         return self._filter_list_empty_fields(ret)\n"

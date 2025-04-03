@@ -15,6 +15,7 @@
     "prettier": "^3.5.3"
   },
   "dependencies": {
+    "@marp-team/marp-cli": "^4.1.2",
     "@slidev/theme-default": "^0.25.0"
   }
 }

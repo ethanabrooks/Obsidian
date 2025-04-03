@@ -17,7 +17,7 @@ Below are up to 5 examples demonstrating the AI's synthesized GitHub issue based
 
 **Output (Synthesized Issue):**
 
-> # Some Ansible variables are missing from INTERNAL_STATIC_VARS
+> **Some Ansible variables are missing from INTERNAL_STATIC_VARS**
 >
 > Ansible has a set of internal variables that are reserved and cannot be overridden by users. However, it seems that some important variables are missing from this set, leading to potential naming conflicts or unexpected behavior.
 >
@@ -93,7 +93,7 @@ index af60053a3dd445..d8c7089bcb9856 100644
 
 **Output (Synthesized Issue):**
 
-> # Unable to save FileUpload to Path instances
+> **Unable to save FileUpload to Path instances**
 >
 > When attempting to save a `FileUpload` instance to a `Path` object (e.g. from the `pathlib` module), the following error is raised:
 >
@@ -136,7 +136,7 @@ index 38a9732f..cba9f44c 100755
 
 **Output (Synthesized Issue):**
 
-> # Celery Tasks Not Storing Results Despite `ignore_result=False`
+> **Celery Tasks Not Storing Results Despite `ignore_result=False`**
 >
 > When executing a Celery task with `apply_async(ignore_result=False)`, the task result is not being stored even though `ignore_result` is set to `False`. This issue occurs when the Celery app configuration has `task_ignore_results=True` set globally.
 >
@@ -176,7 +176,7 @@ index 2e8cf8a318..d2c233cba9 100644
 
 **Output (Synthesized Issue):**
 
-> # Error installing or running Certbot due to pip warning or editable mode failure
+> **Error installing or running Certbot due to pip warning or editable mode failure**
 >
 > When trying to install or run Certbot, I'm seeing the following warning or error related to pip and editable mode:
 >
@@ -215,7 +215,7 @@ index 03c7714381..8fa1bd0edb 100755
 
 **Output (Synthesized Issue):**
 
-> # Pre-commit hooks outdated and need updating
+> **Pre-commit hooks outdated and need updating**
 >
 > The pre-commit hooks used for code linting and formatting in this repository are out of date. The versions specified in the .pre-commit-config.yaml file are behind the latest releases for hooks like flake8, pre-commit-hooks, yamllint, etc.
 >

@@ -9,19 +9,45 @@ MAX_DIFF_LENGTH = 2000  # Max characters for the diff in displayed examples
 NUM_LLM_PROMPT_EXAMPLES = 2 # How many LLM prompts for the appendix
 
 
-def format_issue(issue_data: dict[str, str] | str) -> str:
-    """Formats the synthesized issue dict or string into a Markdown string."""
-    if isinstance(issue_data, dict):
-        title = issue_data.get("title", "N/A")
-        body = issue_data.get("body", "N/A")
+def format_issue(issue_data: str) -> str:
+    """Formats the synthesized issue string into a Markdown blockquote.
+    If the issue starts with a Markdown header (# Title), that header
+    is converted to bold text.
+    """
+    # Ensure issue_data is treated as a string
+    issue_data = str(issue_data).strip()
+
+    if not issue_data:
+        return "> (Empty issue data)"
+
+    lines = issue_data.splitlines()
+    title = ""
+    body_lines = lines # Default: treat all lines as body
+
+    # Check if the first line is a header
+    if lines[0].startswith("# "):
+        title = lines[0].lstrip('# ').strip()
+        body_lines = lines[1:] # Use remaining lines as body
+
+    # Format the body part for blockquote
+    body = "\n".join(body_lines).strip()
+    formatted_body = ""
+    if body: # Only add body formatting if there is a body
         formatted_body = body.replace('\n', '\n> ')
-        return f"> **Title:** {title}\n>\n> **Body:**\n> {formatted_body}"
-    elif isinstance(issue_data, str):
-        formatted_issue_data = issue_data.replace('\n', '\n> ')
-        return f"> {formatted_issue_data}"
+
+    # Construct the final blockquote
+    if title:
+        # If we extracted a title, format with bold title and body
+        if formatted_body:
+             return f"> **{title}**\n>\n> {formatted_body}"
+        else:
+             # Handle case where there was only a title line
+             return f"> **{title}**"
     else:
-        # Added handling for unexpected types
-        return f"> (Could not format issue data: type {type(issue_data)})"
+        # If no header was found, format the entire original text as body
+        # (This acts as a fallback if the input doesn't match the expected header format)
+        formatted_original_body = issue_data.replace('\n', '\n> ')
+        return f"> {formatted_original_body}"
 
 
 def main() -> None:

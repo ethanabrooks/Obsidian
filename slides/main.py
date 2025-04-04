@@ -4,8 +4,8 @@ import yaml  # type: ignore
 
 INPUT_YAML_PATH = pathlib.Path("synthesized_issues.yaml")
 OUTPUT_MD_PATH = pathlib.Path("experiment_summary.md")
-MAX_EXAMPLES_TO_SHOW = 5 # How many Issue->Diff pairs to display
-MAX_DIFF_LENGTH = 2000  # Max characters for the diff in displayed examples
+MAX_EXAMPLES_TO_SHOW = 10 # How many Issue->Diff pairs to display
+MAX_DIFF_LENGTH = 10_000  # Max characters for the diff in displayed examples
 NUM_LLM_PROMPT_EXAMPLES = 2 # How many LLM prompts for the appendix
 
 

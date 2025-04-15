@@ -34,7 +34,11 @@ Issue Body:
 {answer_text}
 --- End of Comment(s) ---
 
-Based *only* on the text provided in "Potential Answer Comment(s)", does it contain an unambiguous and verifiable answer to the issue described?
+Consider the following criteria for a "qualifying answer":
+1.  **Reference Standard:** Is the answer clear and complete enough to verify other potential answers to the same issue?
+2.  **Code-Based & Static:** Is the answer derivable *solely* from analyzing source code, without running code or tests or checking external states (like CI results)?
+
+Based *only* on the text provided in "Potential Answer Comment(s)", does it meet BOTH criteria for a qualifying answer to the issue described?
 Respond with only 'true' or 'false'.
 """
 
@@ -77,9 +81,11 @@ def _create_llm_agent() -> pydantic_ai.Agent[None, bool]:
         # DEFAULT_MODEL_ID, # Removed based on user feedback/pydantic_ai usage
         DEFAULT_MODEL_ID,
         system_prompt=(
-            "You are assessing whether the provided comment text contains an answer "
-            "to the GitHub issue that is unambiguous and verifiable. "
-            "Focus solely on the comment text provided. Respond ONLY with 'true' or 'false'."
+            "You are assessing GitHub issue comments to determine if they provide a definitive, code-based answer."
+            "A qualifying answer must satisfy two criteria: "
+            "1. Reference Standard: It must be clear and complete enough to verify the correctness of other potential answers. "
+            "2. Code-Based & Static: It must be derivable *solely* from analyzing the code in the codebase, without requiring code execution, tests, or external state checks (like CI). "
+            "Focus ONLY on the provided comment text. Respond ONLY with 'true' or 'false'."
         ),
         instrument=False,  # Keep output clean
         result_type=bool,

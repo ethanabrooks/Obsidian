@@ -7,7 +7,8 @@ import os
 import sys
 from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
-from typing import TypedDict
+from typing import TypedDict, Optional
+import json
 
 import github
 import pydantic_ai
@@ -16,10 +17,11 @@ from github.Issue import Issue
 from github.IssueComment import IssueComment
 from github.PaginatedList import PaginatedList
 from rich.logging import RichHandler
+import pydantic
 
 # --- Constants ---
 
-DEFAULT_MODEL_ID: str = "anthropic:claude-3-5-sonnet-latest"
+DEFAULT_MODEL_ID: str = "openai:o1"
 DEFAULT_REPO: str = "pytorch/pytorch"
 DEFAULT_MAX_ISSUES: int = 100
 # Limit concurrent API calls to avoid rate limits/overload
@@ -50,18 +52,35 @@ logging.basicConfig(
 log = logging.getLogger("rich")
 
 
+# --- Data Models ---
+
+
+class Answer(pydantic.BaseModel):
+    """Structured assessment of whether comments answer an issue."""
+
+    in_what_way_question_is_answered_or_not: str = pydantic.Field(
+        description="Explain whether the comment(s) meet the criteria (Reference Standard AND Code-Based/Static). If not, explain why."
+    )
+    answer_summary: Optional[str] = pydantic.Field(
+        default=None,
+        description="If BOTH criteria are met, provide a concise summary of the answer derived from the comment(s). Otherwise, leave this as null.",
+    )
+
+
 class AssessedIssue(TypedDict):
     """Structure to hold assessment results."""
 
     url: str
     title: str
-    is_answered: bool
+    assessment: Optional[Answer]
+    issue_body: Optional[str]
+    answer_text: Optional[str]
 
 
 # --- LLM Assessment ---
 
 
-def _create_llm_agent() -> pydantic_ai.Agent[None, bool]:
+def _create_llm_agent() -> pydantic_ai.Agent[None, Answer]:
     """Initializes the LLM agent for answer assessment."""
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
@@ -74,32 +93,34 @@ def _create_llm_agent() -> pydantic_ai.Agent[None, bool]:
     # Note: pydantic_ai might use litellm defaults; explicitly setting model and key.
     # Removed setting pydantic_ai.llm_config = {...} as it might conflict with Agent internal config
 
-    return pydantic_ai.Agent[None, bool](
+    return pydantic_ai.Agent[None, Answer](
         # The model ID is now often passed via llm_config or during run,
         # but let's keep it here for clarity if pydantic_ai supports it directly.
         # If error, move model_id config solely into llm_config.
         # DEFAULT_MODEL_ID, # Removed based on user feedback/pydantic_ai usage
         DEFAULT_MODEL_ID,
         system_prompt=(
-            "You are assessing GitHub issue comments to determine if they provide a definitive, code-based answer."
+            "You are assessing GitHub issue comments to determine if they provide a definitive, code-based answer, conforming to the provided JSON schema."
             "A qualifying answer must satisfy two criteria: "
             "1. Reference Standard: It must be clear and complete enough to verify the correctness of other potential answers. "
             "2. Code-Based & Static: It must be derivable *solely* from analyzing the code in the codebase, without requiring code execution, tests, or external state checks (like CI). "
-            "Focus ONLY on the provided comment text. Respond ONLY with 'true' or 'false'."
+            "Focus ONLY on the provided comment text. "
+            "Respond using the JSON schema, providing an explanation in 'in_what_way_question_is_answered_or_not'. "
+            "Provide a summary in 'answer_summary' ONLY IF BOTH criteria are met, otherwise leave 'answer_summary' as null."
         ),
         instrument=False,  # Keep output clean
-        result_type=bool,
+        result_type=Answer,
         # Explicitly set parsing model if needed, assuming it uses llm_config otherwise
         # parsing_model_id=DEFAULT_MODEL_ID,
     )
 
 
 async def _assess_answer(
-    agent: pydantic_ai.Agent[None, bool],
+    agent: pydantic_ai.Agent[None, Answer],
     issue_title: str,
     issue_body: str | None,
     answer_text: str,
-) -> bool:
+) -> Answer | None:
     """Uses the LLM agent to assess if the provided text answers an issue."""
     try:
         prompt = ASSESSMENT_PROMPT.format(
@@ -108,14 +129,14 @@ async def _assess_answer(
             answer_text=answer_text,
         )
         result = await agent.run(prompt)
-        log.debug(f"Assessment for '{issue_title}': {result}")
+        log.debug(f"Assessment for '{issue_title}': {result.data}")
         return result.data
     except Exception as e:
         # Include issue title for better error tracking
         log.error(f"Error assessing issue '{issue_title}': {e}")
-        # Consider how to handle assessment errors; returning False might skew results.
-        # Could return None or raise to signal failure. Defaulting to False for now.
-        return False
+        # Consider how to handle assessment errors; returning None might skew results.
+        # Could return None or raise to signal failure. Defaulting to None for now.
+        return None
 
 
 # --- GitHub Interaction ---
@@ -136,33 +157,34 @@ def _create_github_client() -> Github:
 
 def _get_closed_issues(gh: Github, repo_name: str, limit: int) -> Iterator[Issue]:
     """Fetches closed issues (not PRs) from the specified repository, yielding them."""
-    log.info(
-        f"Fetching up to {limit} most recently updated closed issues from {repo_name}..."
-    )
+    # Exclude issues with the 'module: flaky-tests' label
+    query = f'repo:{repo_name} is:issue is:closed -label:"module: flaky-tests"'
+    log.info(f"Searching for issues matching query: '{query}' (limit {limit})...")
+
     try:
-        repo = gh.get_repo(repo_name)
-        # Note: PyGithub's get_issues might not directly support complex search queries well.
-        # Fetching closed issues sorted by update time is standard. Filtering PRs happens client-side.
-        issues = repo.get_issues(state="closed", sort="updated", direction="desc")
+        # Use search_issues for label filtering, sort by updated time
+        issues_result = gh.search_issues(query=query, sort="updated", order="desc")
 
         count = 0
-        for issue in issues:
+        # PaginatedList needs iteration; respect the limit
+        for issue in issues_result:
             if count >= limit:
                 log.info(f"Reached limit of {limit} issues.")
                 break
-            # Ensure it's an issue, not a pull request
+            # Double-check it's not a PR (search should handle is:issue, but belt-and-suspenders)
             if not hasattr(issue, "pull_request") or issue.pull_request is None:
                 yield issue
                 count += 1
             else:
-                log.debug(f"Skipping PR: {issue.html_url}")
+                # This case should be rare with 'is:issue' in query
+                log.debug(
+                    f"Skipping unexpected PR found in issue search: {issue.html_url}"
+                )
 
         if count == 0:
             log.warning(
-                f"No closed issues (non-PRs) found matching criteria in {repo_name}."
+                f"No closed issues (non-PR, non-flaky-test) found matching criteria in {repo_name}."
             )
-        else:
-            log.info(f"Finished fetching. Found {count} issues to process.")
 
     except github.GithubException as e:
         log.error(f"GitHub API error fetching issues: {e}")
@@ -229,7 +251,7 @@ def _get_potential_answer_text(issue: Issue) -> str | None:
 
 
 async def _process_single_issue(
-    issue: Issue, agent: pydantic_ai.Agent[None, bool], semaphore: asyncio.Semaphore
+    issue: Issue, agent: pydantic_ai.Agent[None, Answer], semaphore: asyncio.Semaphore
 ) -> AssessedIssue | None:
     """Processes a single issue: gets comments, assesses answer, returns result."""
     async with semaphore:
@@ -240,20 +262,33 @@ async def _process_single_issue(
             log.warning(
                 f"No potential answer comments found for {issue.html_url}, skipping assessment."
             )
-            # Return None or a specific status? Returning None to filter out later.
-            return None
+            # Return AssessedIssue with inputs but no assessment
+            return AssessedIssue(
+                url=issue.html_url,
+                title=issue.title,
+                assessment=None,
+                issue_body=issue.body,
+                answer_text=None,
+            )
 
         # Run assessment asynchronously
-        is_answered = await _assess_answer(agent, issue.title, issue.body, answer_text)
-        breakpoint()
+        assessment_result = await _assess_answer(
+            agent, issue.title, issue.body, answer_text
+        )
+        if assessment_result and assessment_result.answer_summary is not None:
+            breakpoint()
 
         return AssessedIssue(
-            url=issue.html_url, title=issue.title, is_answered=is_answered
+            url=issue.html_url,
+            title=issue.title,
+            assessment=assessment_result,  # Store Answer object or None
+            issue_body=issue.body,  # Store issue body
+            answer_text=answer_text,  # Store concatenated comment text
         )
 
 
 async def _process_issues_concurrently(
-    gh: Github, agent: pydantic_ai.Agent[None, bool], repo_name: str, max_issues: int
+    gh: Github, agent: pydantic_ai.Agent[None, Answer], repo_name: str, max_issues: int
 ) -> AsyncIterator[AssessedIssue]:
     """Fetches issues and processes them concurrently using a streaming pipeline."""
     semaphore = asyncio.Semaphore(max_concurrent_assessments)
@@ -314,43 +349,66 @@ async def main(repo_name: str, max_issues: int, output_file: Path | None) -> Non
     gh = _create_github_client()
     agent = _create_llm_agent()
 
-    answered_issues: list[AssessedIssue] = []
-    unanswered_issues: list[AssessedIssue] = []
+    # Store all results, categorization happens during reporting/output
+    all_results: list[AssessedIssue] = []
     issues_counted = 0
 
     log.info("Starting concurrent issue processing...")
     async for result in _process_issues_concurrently(gh, agent, repo_name, max_issues):
         issues_counted += 1
-        if result["is_answered"]:
-            answered_issues.append(result)
+        all_results.append(result)
+        # Log based on the assessment result
+        if result["assessment"] and result["assessment"].answer_summary is not None:
             log.info(
-                f"[bold green]Answered:[/bold green] ({issues_counted}) {result['url']} - {result['title'][:80]}..."
+                f"[bold green]Answer Found ({issues_counted}):[/bold green] {result['url']} - {result['assessment'].in_what_way_question_is_answered_or_not[:100]}..."
             )
         else:
-            unanswered_issues.append(result)
+            explanation = "Assessment failed or missing."
+            if result["assessment"]:
+                explanation = result[
+                    "assessment"
+                ].in_what_way_question_is_answered_or_not
             log.info(
-                f"[bold red]Not Answered:[/bold red] ({issues_counted}) {result['url']} - {result['title'][:80]}..."
+                f"[bold yellow]No Answer Found ({issues_counted}):[/bold yellow] {result['url']} - {explanation[:100]}..."
             )
 
     log.info("-" * 30)
-    log.info("Assessment Summary (Processed {issues_counted} issues):")
-    log.info(f"  Clearly Answered: {len(answered_issues)}")
-    log.info(f"  Not Clearly Answered: {len(unanswered_issues)}")
+    # Recalculate counts based on final results
+    answered_count = sum(
+        1
+        for r in all_results
+        if r["assessment"] and r["assessment"].answer_summary is not None
+    )
+    unanswered_count = len(all_results) - answered_count
+    log.info(f"Assessment Summary (Processed {issues_counted} issues):")
+    log.info(f"  Issues with Qualifying Answers: {answered_count}")
+    log.info(f"  Issues without Qualifying Answers: {unanswered_count}")
 
     if output_file:
-        log.info(f"Writing results to {output_file}...")
+        log.info(f"Writing detailed results to {output_file} as JSON Lines...")
         try:
-            # Ensure correct newline handling
+            # Write as JSON Lines (one JSON object per line)
             with output_file.open("w", encoding="utf-8") as f:
-                f.write("--- Answered Issues ---\n")
-                for issue in answered_issues:
-                    f.write(f"- {issue['url']} : {issue['title']}\n")
-                f.write("\n--- Not Clearly Answered Issues ---\n")
-                for issue in unanswered_issues:
-                    f.write(f"- {issue['url']} : {issue['title']}\n")
+                for result in all_results:
+                    # Convert Pydantic model to dict for JSON serialization
+                    assessment_dict = (
+                        result["assessment"].dict() if result["assessment"] else None
+                    )
+                    # Create dict compatible with JSON Lines
+                    output_data = {
+                        "url": result["url"],
+                        "title": result["title"],
+                        "issue_body": result["issue_body"],
+                        "answer_text": result["answer_text"],
+                        "assessment": assessment_dict,
+                    }
+                    json.dump(output_data, f)
+                    f.write("\n")  # Add newline for JSON Lines format
             log.info("Results written successfully.")
         except IOError as e:
             log.error(f"Failed to write results to {output_file}: {e}")
+        except TypeError as e:
+            log.error(f"Failed to serialize results to JSON: {e}")  # Catch JSON errors
 
 
 if __name__ == "__main__":

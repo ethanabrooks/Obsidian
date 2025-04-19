@@ -1,7 +1,36 @@
+import matplotlib
+
+# --- Force Agg Backend BEFORE importing pyplot ---
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import matplotlib.lines as mlines  # Import for creating line handles
+
+# --- Text Size Parameters (Increased Significantly) ---
+TITLE_FONTSIZE = 28
+AXIS_LABEL_FONTSIZE = 22
+TICK_LABEL_FONTSIZE = 18
+LEGEND_TITLE_FONTSIZE = 20
+LEGEND_LABEL_FONTSIZE = 18
+MARKER_SIZE = 200
+LINE_WIDTH = 2.5
+LEGEND_MARKER_SIZE = 14
+
+# --- Update rcParams (Keep this as a baseline) ---
+matplotlib.rcParams.update(
+    {
+        "figure.titlesize": TITLE_FONTSIZE,
+        "axes.titlesize": TITLE_FONTSIZE,
+        "axes.labelsize": AXIS_LABEL_FONTSIZE,
+        "xtick.labelsize": TICK_LABEL_FONTSIZE,
+        "ytick.labelsize": TICK_LABEL_FONTSIZE,
+        "legend.fontsize": LEGEND_LABEL_FONTSIZE,
+        "legend.title_fontsize": LEGEND_TITLE_FONTSIZE,
+        "figure.dpi": 150,  # Increase base DPI slightly
+    }
+)
+# --- End rcParams Update ---
 
 # Raw data
 queries = [
@@ -63,16 +92,8 @@ correctness_markers = {
 }
 
 # Plotting configuration
-plt.figure(figsize=(16, 10))  # Slightly larger figure for bigger text
+plt.figure(figsize=(18, 12))  # Increased figure size further
 ax = plt.gca()
-
-# Text Size Parameters
-TITLE_FONTSIZE = 24
-AXIS_LABEL_FONTSIZE = 18
-TICK_LABEL_FONTSIZE = 14
-LEGEND_TITLE_FONTSIZE = 16
-LEGEND_LABEL_FONTSIZE = 14
-MARKER_SIZE = 180  # Increased marker size slightly
 
 # 1. Plot the lines connecting points for each model
 sns.lineplot(
@@ -84,7 +105,7 @@ sns.lineplot(
     legend=False,
     markers=False,
     dashes=False,
-    linewidth=2,  # Slightly thicker line
+    linewidth=LINE_WIDTH,
     ax=ax,
 )
 
@@ -102,7 +123,7 @@ sns.scatterplot(
     style="Correctness Label",
     palette=model_colors,
     markers=correctness_markers,
-    s=MARKER_SIZE,  # Use marker size variable
+    s=MARKER_SIZE,
     legend=False,
     ax=ax,
 )
@@ -113,9 +134,7 @@ plt.ylabel("Response Time (seconds)", fontsize=AXIS_LABEL_FONTSIZE)
 plt.xlabel("Query", fontsize=AXIS_LABEL_FONTSIZE)
 
 # Increase tick label sizes
-plt.xticks(
-    rotation=20, ha="right", fontsize=TICK_LABEL_FONTSIZE
-)  # Increased rotation slightly
+plt.xticks(rotation=25, ha="right", fontsize=TICK_LABEL_FONTSIZE)
 plt.yticks(fontsize=TICK_LABEL_FONTSIZE)
 
 plt.grid(axis="y", linestyle="--", alpha=0.7)
@@ -128,7 +147,7 @@ agent_handles = [
         color=model_colors[agent],
         marker=None,
         linestyle="-",
-        linewidth=2,  # Match line thickness
+        linewidth=LINE_WIDTH,
         label=agent,
     )
     for agent in models
@@ -141,32 +160,33 @@ correct_handles = [
         color="black",
         marker=details["marker"],
         linestyle="None",
-        markersize=12,  # Slightly larger legend marker
+        markersize=LEGEND_MARKER_SIZE,
         label=details["label"],
     )
-    # Iterate using values() if the key (correct_bool) is not needed
     for details in correctness_mapping.values()
 ]
 
 handles = agent_handles + correct_handles
 labels = [h.get_label() for h in handles]
 
+# Adjust legend properties
 ax.legend(
     handles=handles,
     labels=labels,
     title="Agent / Correctness",
-    bbox_to_anchor=(1.04, 1),  # Adjusted anchor slightly
+    bbox_to_anchor=(1.03, 1),
     loc="upper left",
-    fontsize=LEGEND_LABEL_FONTSIZE,  # Set legend item font size
-    title_fontsize=LEGEND_TITLE_FONTSIZE,  # Set legend title font size
+    fontsize=LEGEND_LABEL_FONTSIZE,
+    title_fontsize=LEGEND_TITLE_FONTSIZE,
 )
 # --- End Manual Legend Creation ---
 
+# Adjust layout even more aggressively for larger text
+plt.tight_layout(rect=(0.02, 0.02, 0.82, 0.95))
 
-# Adjust layout more aggressively for larger text
-plt.tight_layout(rect=(0, 0, 0.83, 0.96))  # Adjusted rect: more space on right and top
-
-plt.savefig(
-    "survey_large_text.png", dpi=300, bbox_inches="tight"
-)  # Use bbox_inches='tight' for savefig
+plt.savefig("survey_large_text_v2.png", dpi=300, bbox_inches="tight")
 # plt.show()
+
+# --- Reset rcParams if needed ---
+# If running other plots later in the same script, you might want to reset
+# matplotlib.rcParams.update(matplotlib.rcParamsDefault)

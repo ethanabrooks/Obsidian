@@ -1,0 +1,21 @@
+# List of travel options to compare
+- name: "Flight_JFK_SEA_ORF_LGA"
+  terminal: "JFK_Subway" # Defined in terminals.yaml
+  cost: 436 # Flight cost
+  duration: 924
+  hassle: 20 # General hassle: Nonstop, convenient time (subway hassle is in terminals.yaml)
+  url: https://www.google.com/travel/flights/s/tReogGowXzJmL5Hm6
+
+- name: "Bus_Hanover"
+  terminal: "NYC_Bus_42nd" # Defined in terminals.yaml (NEEDS YOUR UPDATES)
+  cost: 190 # $190 round trip / 2 = $95 one way
+  duration: 300 # 5 hours = 300 min
+  hassle: 20 # General hassle: Estimated for bus comfort/schedule
+  url: https://ticketing.dartmouthcoach.com/cart/5dd8449d6b49d10e77c63afd/cart/68052caac1e12d052ff916f1
+
+- name: "Flight_LGA_IAD"
+  terminal: "LGA_Uber" # Defined in terminals.yaml
+  cost: 129
+  duration: 170
+  hassle: 0
+  url: https://www.google.com/travel/flights/s/8wfwdXDVew1JSkc56

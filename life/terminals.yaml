@@ -2,20 +2,22 @@ LGA_Uber:
   travel_time_min: 20
   travel_cost: 55.0
   travel_hassle_cost: 0.0 # Fixed hassle of getting to LGA via Uber
+  departure_buffer_min: 60 # Example: Longer buffer for LGA
 
 JFK_Uber:
   travel_time_min: 40
   travel_cost: 70.0
   travel_hassle_cost: 0.0 # Fixed hassle of getting to JFK via Uber
+  departure_buffer_min: 60 # Example: Longer buffer for JFK
 
 JFK_Subway:
   travel_time_min: 50
   travel_cost: 2.50
   travel_hassle_cost: 30.0 # Fixed hassle of transfers for JFK via Subway
+  departure_buffer_min: 60 # Example: Longer buffer for JFK
 
 NYC_Bus_42nd:
-  travel_time_min: 30 # !! PLEASE UPDATE ESTIMATE !!
-  travel_cost: 2.50 # !! PLEASE UPDATE ESTIMATE (e.g., Subway fare?) !!
-  travel_hassle_cost: 0.0 # !! PLEASE UPDATE ESTIMATE (any fixed hassle getting there?) !!
-
-# Add more terminals here as needed, e.g., EWR_NJTransit, Penn_Station_LIRR, etc.
+  travel_time_min: 40
+  travel_cost: 2.50
+  travel_hassle_cost: 20.0
+  departure_buffer_min: 30

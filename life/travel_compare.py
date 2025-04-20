@@ -1,5 +1,4 @@
-from pydantic import BaseModel, TypeAdapter, ValidationError, Field, field_validator
-from typing import Any
+from pydantic import BaseModel, TypeAdapter, Field
 import argparse
 import sys
 from pathlib import Path
@@ -187,9 +186,17 @@ def main(args: argparse.Namespace) -> None:
         )
         sys.exit(1)
 
-    # Print detailed breakdown for all processed options
-    print("\n--- Options Comparison Breakdown ---")
-    for name, costs in all_results.items():
+    # Print detailed breakdown for all processed options, sorted by effective cost
+    print("\n--- Options Comparison Breakdown (Sorted by Effective Cost) ---")
+    # Sort the option names based on their effective cost
+    sorted_option_names = sorted(
+        all_results.keys(),
+        key=lambda name: all_results[name].effective_cost,
+        reverse=True,
+    )
+
+    for name in sorted_option_names:
+        costs = all_results[name]
         # Retrieve the corresponding full option to pass terminal name etc.
         option_details = valid_options_data[name]
         print_comparison_costs(

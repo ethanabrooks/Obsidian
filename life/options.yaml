@@ -1,11 +1,3 @@
-# List of travel options to compare
-- name: "Flight_JFK_SEA_ORF_LGA"
-  terminal: "JFK_Subway" # Defined in terminals.yaml
-  cost: 436 # Flight cost
-  duration: 924
-  hassle: 30
-  url: https://www.google.com/travel/flights/s/tReogGowXzJmL5Hm6
-
 - name: "Bus_Hanover"
   terminal: "NYC_Bus_42nd" # Defined in terminals.yaml (NEEDS YOUR UPDATES)
   cost: 190 # $190 round trip / 2 = $95 one way
@@ -17,7 +9,7 @@
   terminal: "LGA_Uber" # Defined in terminals.yaml
   cost: 129
   duration: 170
-  hassle: 0
+  hassle: 40
   url: https://www.google.com/travel/flights/s/8wfwdXDVew1JSkc56
 
 - name: "Flight_LGA_ORD"
@@ -27,23 +19,9 @@
   hassle: 20
   url: https://www.google.com/travel/flights/s/w8vpBXuQmV1qUKe36
 
-- name: "Flight_LGA_SEA"
+- name: "Flight_LGA_IAD2"
   terminal: "LGA_Uber" # Defined in terminals.yaml
-  cost: 317
-  duration: 845
-  hassle: 30
-  url: https://www.google.com/travel/flights/s/8UaRnZTqQvs1UcseA
-
-- name: "Flight_JFK_SEA"
-  terminal: "JFK_Uber" # Defined in terminals.yaml
-  cost: 297
-  duration: 708
-  hassle: 90
-  url: https://www.google.com/travel/flights/s/iswR8omgw995dcVo9
-
-- name: "Flight_JFK_SEA"
-  terminal: "JFK_Subway" # Defined in terminals.yaml
-  cost: 297
-  duration: 708
-  hassle: 90
-  url: https://www.google.com/travel/flights/s/iswR8omgw995dcVo9
+  cost: 138
+  duration: 185
+  hassle: 0
+  url: https://www.google.com/travel/flights/s/w8vpBXuQmV1qUKe36

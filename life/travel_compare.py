@@ -13,6 +13,11 @@ from travel_chooser import (
     calculate_costs,  # Use the function that returns costs
 )
 
+# Rich is now assumed to be installed for formatted output
+from rich.console import Console
+from rich.table import Table
+# from rich.text import Text # Not currently used
+
 
 # --- Pydantic Models for Input Options File Validation ---
 class InputOptionModel(BaseModel):
@@ -30,7 +35,7 @@ InputOptionsConfig = TypeAdapter(list[InputOptionModel])
 # --- Functions ---
 
 
-def load_options_file(filepath: Path) -> list[InputOptionModel]:
+def load_options_file(filepath: Path) -> list[InputOptionModel]:  # Use lowercase list
     """Loads and validates the list of travel options from a YAML file."""
     with open(filepath, "r") as f:
         raw_data = yaml.safe_load(f)
@@ -96,52 +101,11 @@ def create_full_travel_option(
     return final_option
 
 
-def print_comparison_costs(
-    option_name: str,
-    terminal_name: str,
-    return_terminal_name: str,
-    costs: CalculatedCosts,  # Use the NamedTuple type
-    value_of_time_per_hour: float,
-):
-    """Prints the formatted breakdown for one option in the comparison."""
-    print(f"--- {option_name} (Dep: {terminal_name}, Ret: {return_terminal_name}) ---")
-    # Costs breakdown
-    print(f"  Round Trip Journey Cost: ${costs.round_trip_journey_cost:.2f}")
-    print(f"  Dep. Travel Cost:       ${costs.dep_travel_cost:.2f}")
-    print(f"  Ret. Travel Cost:       ${costs.ret_travel_cost:.2f}")
-    if costs.dep_fixed_travel_hassle > 0:
-        print(f"  Dep. Fixed Travel Hassle:${costs.dep_fixed_travel_hassle:.2f}")
-    if costs.ret_fixed_travel_hassle > 0:
-        print(f"  Ret. Fixed Travel Hassle:${costs.ret_fixed_travel_hassle:.2f}")
-    if costs.round_trip_general_hassle > 0:
-        print(f"  Round Trip Gen. Hassle: ${costs.round_trip_general_hassle:.2f}")
-    if costs.total_combined_hassle > 0:
-        print(f"  Total Hassle Cost:      ${costs.total_combined_hassle:.2f}")
-    print("  -----------------------------------")
-    print(f"  Total Base Cost:         ${costs.base_cost:.2f}")
-    print("  -----------------------------------")
-    # Time breakdown
-    print(f"  Dep. Travel Time:       {costs.dep_travel_time_min} min")
-    print(f"  Dep. Buffer:            {costs.dep_buffer_min} min")
-    print(
-        f"  Round Trip Journey Time:{costs.journey_duration_min} min"
-    )  # This field holds RT duration
-    print(f"  Arr. Buffer:            {costs.arr_buffer_min} min")
-    print(f"  Ret. Travel Time:       {costs.ret_travel_time_min} min")
-    print(
-        f"  Total Time:              {costs.total_time} min ({costs.total_time / 60.0:.2f} hours)"
-    )
-    print(
-        f"  Value of Total Time:     ${costs.time_cost:.2f} (at ${value_of_time_per_hour:.2f}/hr)"
-    )
-    print("  ===================================")
-    print(f"  EFFECTIVE COST:          ${costs.effective_cost:.2f}")
-    print("===================================")
-
-
 # --- Main Execution ---
 def main(args: argparse.Namespace) -> None:
     """Loads data, processes options, calculates costs, compares, and prints."""
+    console = Console()
+
     terminals_file_path = Path(args.terminals_file)
     options_file_path = Path(args.options_file)
 
@@ -152,10 +116,10 @@ def main(args: argparse.Namespace) -> None:
     input_options = load_options_file(options_file_path)
 
     # Process each option
-    all_results: dict[str, CalculatedCosts] = {}  # Store the NamedTuple
-    valid_options_data: dict[str, TravelOption] = {}  # Store full option for printing
+    all_results: dict[str, CalculatedCosts] = {}
+    valid_options_data: dict[str, TravelOption] = {}
 
-    print(
+    console.print(
         f"\nProcessing {len(input_options)} options from '{options_file_path.name}'..."
     )
 
@@ -187,42 +151,92 @@ def main(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     # Print detailed breakdown for all processed options, sorted by effective cost
-    print("\n--- Options Comparison Breakdown (Sorted by Effective Cost) ---")
+    console.print("\n--- Options Comparison Breakdown (Sorted by Effective Cost) ---")
     # Sort the option names based on their effective cost
     sorted_option_names = sorted(
         all_results.keys(),
         key=lambda name: all_results[name].effective_cost,
-        reverse=True,
+        # reverse=True, # Keep ascending order (lowest cost first)
     )
+
+    # Prepare Rich table if available
+    table = None
+    if Table:
+        table = Table(
+            title="Travel Options Comparison",
+            show_header=True,
+            header_style="bold cyan",
+            show_lines=True,
+        )
+        table.add_column("Option", style="dim", width=20)
+        table.add_column("Terminals (Dep / Ret)")
+        table.add_column("Base Cost", justify="right")
+        table.add_column("Hassle Cost", justify="right")
+        table.add_column("Time Value", justify="right")
+        table.add_column("Total Time", justify="right")
+        table.add_column("Effective Cost", justify="right", style="bold")
+
+    best_option_name = sorted_option_names[0]  # Lowest cost is first
 
     for name in sorted_option_names:
         costs = all_results[name]
         # Retrieve the corresponding full option to pass terminal name etc.
         option_details = valid_options_data[name]
-        print_comparison_costs(
-            name,
-            option_details.terminal_name,
-            option_details.return_terminal_name,
-            costs,
-            args.value_of_time,
-        )
-        print()  # Add a blank line between options
+
+        if table:
+            # Format data for table cells
+            terminals_str = f"{option_details.terminal_name} / {option_details.return_terminal_name}"
+            if option_details.terminal_name == option_details.return_terminal_name:
+                terminals_str = option_details.terminal_name
+            base_cost_str = f"${costs.base_cost - costs.total_combined_hassle:.2f}"  # Base without hassle
+            hassle_str = (
+                f"${costs.total_combined_hassle:.2f}"
+                if costs.total_combined_hassle > 0
+                else "-"
+            )
+            time_value_str = f"${costs.time_cost:.2f}"
+            total_time_hrs = costs.total_time / 60.0
+            total_time_str = f"{costs.total_time}m ({total_time_hrs:.1f}h)"
+            effective_cost_str = f"${costs.effective_cost:.2f}"
+
+            # Highlight the best row
+            style = "on green" if name == best_option_name else ""
+
+            table.add_row(
+                name,
+                terminals_str,
+                base_cost_str,
+                hassle_str,
+                time_value_str,
+                total_time_str,
+                effective_cost_str,
+                style=style,
+            )
+        else:  # Fallback if rich is not installed
+            print(
+                f"--- {name} (Dep: {option_details.terminal_name}, Ret: {option_details.return_terminal_name}) ---"
+            )
+            print(f"  Effective Cost: ${costs.effective_cost:.2f}")
+            print(f"  Total Time: {costs.total_time} min")
+            print("...")  # Basic fallback
 
     # Find the best option
-    best_option_name = min(
-        all_results, key=lambda name: all_results[name].effective_cost
-    )
+    if table:
+        console.print(table)
+    else:
+        console.print("\n(Install 'rich' library for a formatted table output)")
+
     min_effective_cost = all_results[best_option_name].effective_cost
 
     # Print Recommendation
-    print("\n--- Recommendation ---")
-    print(
+    console.print("\n--- Recommendation ---")
+    console.print(
         f"Comparing {len(all_results)} options using data from '{terminals_file_path.name}' and '{options_file_path.name}'."
     )
-    print(f"Based on a time value of ${args.value_of_time:.2f}/hour:")
-    print(
-        f"The best option is '{best_option_name}' "
-        f"with an effective cost of ${min_effective_cost:.2f}"
+    console.print(f"Based on a time value of ${args.value_of_time:.2f}/hour:")
+    console.print(
+        f"The [bold green]best option is '{best_option_name}'[/bold green] "
+        f"with an effective cost of [bold green]${min_effective_cost:.2f}[/bold green]"
     )
 
 

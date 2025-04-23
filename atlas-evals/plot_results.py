@@ -96,7 +96,6 @@ def plot_grouped_stacked_results(
     total_bars = n_models * n_questions
     bar_width = 0.8  # Width relative to space for one bar
     group_gap = 0.2  # Gap between model groups (relative to bar width)
-    index = np.arange(total_bars)  # Absolute index for each bar
 
     # Calculate positions accounting for gaps
     bar_indices_within_group = np.arange(n_questions)
@@ -159,25 +158,7 @@ def plot_grouped_stacked_results(
     unique_labels = OrderedDict(zip(labels, handles))
     ax.legend(unique_labels.values(), unique_labels.keys(), title="Rubric Status")
 
-    # --- Question Text Annotation ---
-    question_text = "\n".join(
-        [
-            f"{i + 1}: {q[:100]}{'...' if len(q) > 100 else ''}"
-            for i, q in enumerate(questions)
-        ]
-    )
-    # Add text below the plot
-    fig.text(
-        0.5,
-        0.01,
-        f"Questions:\n{question_text}",
-        ha="center",
-        va="bottom",
-        fontsize=8,
-        wrap=True,
-    )
-
-    plt.tight_layout(rect=[0, 0.05, 1, 0.95])  # Adjust layout for annotation/title
+    plt.tight_layout()  # Use default layout adjustment
     plt.show()
 
 

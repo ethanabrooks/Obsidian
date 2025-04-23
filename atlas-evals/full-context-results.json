@@ -1,0 +1,40 @@
+{
+  "does anyone know what version of gpt4o machina uses? where can I find that": {
+    "0.0": false,
+    "0.1": false
+  },
+  "Do we have any kind of test or way to verify that the GenerationParams being passed into various LLM clients is picked up? I could be hallucinating, but I've fiddled a LOT with temperature ranging from 0 to 1 (fixing top_p) and claude 3.7 and never seen literally any difference in behavior quantitatively or qualitatively...": {
+    "1.0": true
+  },
+  "What gcs directory structures can I point dromeus --model at? Context: had to manually save a 70b checkpoint and the directory structure from the online RL trainer looks different from the one in, e.g., llama 70b 3.3 checkpoint.": {
+    "2.0": false,
+    "2.1": true
+  },
+  "": {
+    "3.0": true,
+    "3.1": false
+  },
+  "Do we know the underlying cause for sequences that don\u2019t have a sequence file? Is this just something that happens when the original data-generation jobs time out?": {
+    "4.0": false,
+    "4.1": true
+  },
+  "In the agents.generate function, does max_token refer to max total tokens or max output tokens?": {
+    "5.0": false,
+    "5.1": true
+  },
+  "What do the values for diff similarity map to for codemonkeys? I see -1 but not sure how to interpret this": {
+    "6.0": true,
+    "6.1": false,
+    "6.2": true,
+    "6.3": false,
+    "6.4": false
+  },
+  "How are metrics tracked for our online rl pipeline? I want to start tracking how often we have formatting errors and don't know where to start": {
+    "7.0": true,
+    "7.1": true,
+    "7.2": false,
+    "7.3": true,
+    "7.4": true,
+    "7.5": false
+  }
+}

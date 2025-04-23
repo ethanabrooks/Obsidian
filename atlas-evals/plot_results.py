@@ -1,6 +1,5 @@
 import json
 import pathlib
-import math  # Import math for calculating subplot grid size
 
 import matplotlib.pyplot as plt
 import numpy as np  # Import numpy for arranging bars
@@ -78,84 +77,107 @@ def load_all_results(
 def plot_grouped_stacked_results(
     data: ProcessedData, questions: list[str], models: list[str]
 ) -> None:
-    """Plots the results as a grouped, stacked bar chart."""
+    """Plots results grouped by model, with questions as bars within groups."""
     n_questions = len(questions)
     n_models = len(models)
 
-    # Prepare data for plotting
-    false_counts = np.zeros((n_questions, n_models))
-    true_counts = np.zeros((n_questions, n_models))
+    # Prepare data: shape (n_models, n_questions)
+    false_counts = np.zeros((n_models, n_questions))
+    true_counts = np.zeros((n_models, n_questions))
 
-    for i, question in enumerate(questions):
-        for j, model in enumerate(models):
-            # Check if model data exists for the question
+    for j, question in enumerate(questions):
+        for i, model in enumerate(models):
             if model in data.get(question, {}):
                 counts = data[question][model]
                 false_counts[i, j] = counts.get("false", 0)
                 true_counts[i, j] = counts.get("true", 0)
-            # else: counts remain 0
 
     # Plotting setup
-    bar_width = 0.25  # Width of each individual bar
-    index = np.arange(n_questions)  # x locations for the groups
+    total_bars = n_models * n_questions
+    bar_width = 0.8  # Width relative to space for one bar
+    group_gap = 0.2  # Gap between model groups (relative to bar width)
+    index = np.arange(total_bars)  # Absolute index for each bar
 
-    fig, ax = plt.subplots(figsize=(12 + n_questions * 0.5, 8))  # Dynamic width
+    # Calculate positions accounting for gaps
+    bar_indices_within_group = np.arange(n_questions)
+    group_centers = np.arange(n_models) * (n_questions + group_gap)
+    # Bar positions: start of group + index within group
+    bar_positions = np.concatenate(
+        [group_centers[i] + bar_indices_within_group for i in range(n_models)]
+    )
 
-    # Plot bars for each model within the groups
-    for i, model in enumerate(models):
-        # Calculate the x position for this model's bars within each group
-        x_pos = index + (i - (n_models - 1) / 2) * bar_width
+    # Flatten data for plotting
+    flat_false_counts = false_counts.flatten()
+    flat_true_counts = true_counts.flatten()
 
-        # Stacked bars: plot 'false' first, then 'true' on top
-        ax.bar(
-            x_pos,
-            false_counts[:, i],
-            bar_width,
-            color="red",
-            label=f"{model} - Failed"
-            if i == 0
-            else "_nolegend_",  # Only label once per color
-            alpha=0.7,
-        )
-        ax.bar(
-            x_pos,
-            true_counts[:, i],
-            bar_width,
-            bottom=false_counts[:, i],
-            color="blue",
-            label=f"{model} - Passed"
-            if i == 0
-            else "_nolegend_",  # Only label once per color
-            alpha=0.7,
-        )
+    fig, ax = plt.subplots(
+        figsize=(8 + total_bars * 0.3, 8)
+    )  # Dynamic width based on total bars
 
-    # Adding labels and title
-    ax.set_xlabel("Question")
+    # Plot bars using calculated positions
+    # Stacked bars: plot 'false' (red) first, then 'true' (blue) on top
+    ax.bar(
+        bar_positions,
+        flat_false_counts,
+        bar_width,
+        color="red",
+        label="Failed",
+        alpha=0.7,
+    )
+    ax.bar(
+        bar_positions,
+        flat_true_counts,
+        bar_width,
+        bottom=flat_false_counts,
+        color="blue",
+        label="Passed",
+        alpha=0.7,
+    )
+
+    # --- X-axis Labeling ---
+    # Major ticks: Model names at the center of each group
+    ax.set_xticks([center + (n_questions - 1) / 2 for center in group_centers])
+    ax.set_xticklabels(models)
+    ax.tick_params(axis="x", which="major", pad=15)  # Pad major labels down
+
+    # Minor ticks: Question numbers centered under each bar
+    ax.set_xticks(bar_positions, minor=True)
+    question_labels = [str(i + 1) for i in range(n_questions)] * n_models
+    ax.set_xticklabels(question_labels, minor=True)
+    ax.tick_params(axis="x", which="minor", labelsize=8)  # Smaller font for numbers
+
+    # Y-axis and Title
     ax.set_ylabel("Number of Rubric Items")
-    ax.set_title("Rubric Pass/Fail Counts per Question by Model")
-    ax.set_xticks(index)
+    ax.set_title("Rubric Pass/Fail Counts by Model (Questions Numbered Within Groups)")
 
-    # Use shortened question text for labels if too long, or rotate
-    xtick_labels = [
-        q[:80] + "..." if len(q) > 80 else q for q in questions
-    ]  # Truncate long questions
-    ax.set_xticklabels(xtick_labels, rotation=45, ha="right")
+    # --- Legend ---
+    # Get unique handles/labels for color legend
+    handles, labels = plt.gca().get_legend_handles_labels()
+    # Keep only unique labels (Passed, Failed)
+    from collections import OrderedDict
 
-    # Create a combined legend
-    handles, labels = ax.get_legend_handles_labels()
-    # Need custom legend handles for stacked groups
-    from matplotlib.patches import Patch
+    unique_labels = OrderedDict(zip(labels, handles))
+    ax.legend(unique_labels.values(), unique_labels.keys(), title="Rubric Status")
 
-    legend_handles = [
-        Patch(facecolor="red", alpha=0.7),
-        Patch(facecolor="blue", alpha=0.7),
-    ]
-    legend_labels = ["Failed", "Passed"]
-    # Add model info to the legend? Maybe just title and colors are enough.
-    # Could add model patches, but might clutter. Let's keep it simple.
-    ax.legend(handles=legend_handles, labels=legend_labels, title="Rubric Status")
+    # --- Question Text Annotation ---
+    question_text = "\n".join(
+        [
+            f"{i + 1}: {q[:100]}{'...' if len(q) > 100 else ''}"
+            for i, q in enumerate(questions)
+        ]
+    )
+    # Add text below the plot
+    fig.text(
+        0.5,
+        0.01,
+        f"Questions:\n{question_text}",
+        ha="center",
+        va="bottom",
+        fontsize=8,
+        wrap=True,
+    )
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0.05, 1, 0.95])  # Adjust layout for annotation/title
     plt.show()
 
 

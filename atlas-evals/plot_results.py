@@ -1,5 +1,6 @@
 import json
 import pathlib
+import csv  # Import csv module
 
 import matplotlib.pyplot as plt
 import numpy as np  # Import numpy for arranging bars
@@ -11,6 +12,7 @@ ModelCounts = dict[str, int]  # e.g., {'true': 10, 'false': 5}
 ProcessedData = dict[
     str, dict[str, ModelCounts]
 ]  # {question: {model: {'true': T, 'false': F}}}
+TinaCorrectMap = dict[int, bool]  # {question_id: is_correct}
 
 
 def load_all_results(
@@ -74,8 +76,48 @@ def load_all_results(
     return all_data, all_questions, models
 
 
+def load_tina_correctness(file_path: pathlib.Path) -> TinaCorrectMap:
+    """Loads Tina correctness data from a CSV file."""
+    correctness_map: TinaCorrectMap = {}
+    if not file_path.exists():
+        print(
+            f"Warning: Tina eval file not found: {file_path}. No outlines will be added."
+        )
+        return correctness_map
+
+    print(f"Processing Tina eval file: {file_path}...")
+    try:
+        with file_path.open("r", encoding="utf-8") as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                try:
+                    # Check if essential columns exist and have values
+                    if (
+                        "question_id" in row
+                        and row["question_id"]
+                        and "tina_correct" in row
+                        and row["tina_correct"]
+                    ):
+                        q_id = int(row["question_id"])
+                        # Convert 'TRUE'/'FALSE' (case-insensitive) to boolean
+                        is_correct = row["tina_correct"].strip().upper() == "TRUE"
+                        correctness_map[q_id] = is_correct
+                    # else: skip row if missing key data
+                except (ValueError, KeyError) as e:
+                    print(
+                        f"Warning: Skipping row in {file_path} due to parsing error: {e} - Row: {row}"
+                    )
+    except Exception as e:
+        print(f"Error reading Tina eval file {file_path}: {e}")
+
+    return correctness_map
+
+
 def plot_grouped_stacked_results(
-    data: ProcessedData, questions: list[str], models: list[str]
+    data: ProcessedData,
+    questions: list[str],
+    models: list[str],
+    tina_correct_map: TinaCorrectMap,
 ) -> None:
     """Plots results grouped by model, with questions as bars within groups."""
     n_questions = len(questions)
@@ -85,17 +127,18 @@ def plot_grouped_stacked_results(
     false_counts = np.zeros((n_models, n_questions))
     true_counts = np.zeros((n_models, n_questions))
 
-    for j, question in enumerate(questions):
-        for i, model in enumerate(models):
+    for question_index, question in enumerate(questions):
+        for model_index, model in enumerate(models):
             if model in data.get(question, {}):
                 counts = data[question][model]
-                false_counts[i, j] = counts.get("false", 0)
-                true_counts[i, j] = counts.get("true", 0)
+                false_counts[model_index, question_index] = counts.get("false", 0)
+                true_counts[model_index, question_index] = counts.get("true", 0)
 
     # Plotting setup
     total_bars = n_models * n_questions
     bar_width = 0.8  # Width relative to space for one bar
     group_gap = 0.2  # Gap between model groups (relative to bar width)
+    # index variable removed as it was unused
 
     # Calculate positions accounting for gaps
     bar_indices_within_group = np.arange(n_questions)
@@ -109,29 +152,49 @@ def plot_grouped_stacked_results(
     flat_false_counts = false_counts.flatten()
     flat_true_counts = true_counts.flatten()
 
-    fig, ax = plt.subplots(
+    # Create figure and axes - Remove unused fig variable
+    _fig, ax = plt.subplots(
         figsize=(8 + total_bars * 0.3, 8)
     )  # Dynamic width based on total bars
 
     # Plot bars using calculated positions
-    # Stacked bars: plot 'false' (red) first, then 'true' (blue) on top
-    ax.bar(
-        bar_positions,
-        flat_false_counts,
-        bar_width,
-        color="red",
-        label="Failed",
-        alpha=0.7,
-    )
-    ax.bar(
-        bar_positions,
-        flat_true_counts,
-        bar_width,
-        bottom=flat_false_counts,
-        color="blue",
-        label="Passed",
-        alpha=0.7,
-    )
+    for bar_idx, abs_pos in enumerate(bar_positions):
+        # Determine model and question index for this specific bar
+        model_idx = bar_idx // n_questions
+        question_idx = bar_idx % n_questions
+
+        # Check Tina correctness for this question index
+        is_tina_correct = tina_correct_map.get(question_idx, False)
+        bar_kwargs = {}
+        if is_tina_correct:
+            bar_kwargs = dict(
+                edgecolor="lime", linewidth=4, zorder=10
+            )  # Use lime green, bring to front
+
+        # Get counts for this specific bar
+        f_count = flat_false_counts[bar_idx]
+        t_count = flat_true_counts[bar_idx]
+
+        # Stacked bars: plot 'false' (red) first, then 'true' (blue) on top
+        ax.bar(
+            abs_pos,  # Plot one bar at a time
+            f_count,
+            bar_width,
+            color="red",
+            label="Failed" if bar_idx == 0 else "_nolegend_",  # Label only once
+            alpha=0.7,
+            **bar_kwargs,  # Apply outline if tina_correct
+        )
+        ax.bar(
+            abs_pos,  # Plot one bar at a time
+            t_count,
+            bar_width,
+            bottom=f_count,
+            color="blue",
+            label="Passed" if bar_idx == 0 else "_nolegend_",  # Label only once
+            alpha=0.7,
+            **bar_kwargs,  # Apply outline if tina_correct
+        )
 
     # --- X-axis Labeling ---
     # Major ticks: Model names at the center of each group
@@ -156,10 +219,27 @@ def plot_grouped_stacked_results(
     from collections import OrderedDict
 
     unique_labels = OrderedDict(zip(labels, handles))
-    ax.legend(unique_labels.values(), unique_labels.keys(), title="Rubric Status")
+    # Add entry for Tina Correct outline if any exist
+    if any(tina_correct_map.values()):
+        from matplotlib.lines import Line2D
+
+        tina_handle = Line2D([0], [0], color="lime", lw=1.5, label="Tina Correct")
+        # Insert Tina handle/label before others or at the end
+        # unique_labels['Tina Correct'] = tina_handle # Alternative: add to dict
+        existing_handles = list(unique_labels.values())
+        existing_labels = list(unique_labels.keys())
+        ax.legend(
+            handles=[tina_handle] + existing_handles,
+            labels=["Tina Correct"] + existing_labels,
+            title="Rubric Status",
+        )
+    else:
+        ax.legend(unique_labels.values(), unique_labels.keys(), title="Rubric Status")
+
+    # --- Question Text Annotation Removed ---
 
     plt.tight_layout()  # Use default layout adjustment
-    plt.show()
+    plt.savefig("plot.png")
 
 
 def main() -> None:
@@ -171,15 +251,17 @@ def main() -> None:
         "Full Context": data_dir / "full-context-results.json",
         "RAGrep": data_dir / "ragrep-results.json",
     }
+    tina_eval_file = data_dir / "tina-eval.csv"
 
     processed_data, questions, models = load_all_results(model_files)
+    tina_correct_map = load_tina_correctness(tina_eval_file)
 
     if not processed_data or not questions:
         print("Error: No valid data found to plot.")
         return
 
     print("Generating plot...")
-    plot_grouped_stacked_results(processed_data, questions, models)
+    plot_grouped_stacked_results(processed_data, questions, models, tina_correct_map)
     print("Plot displayed.")
 
 
